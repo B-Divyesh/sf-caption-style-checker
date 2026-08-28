@@ -1,0 +1,8 @@
+{
+  "slug": "caption-style-checker",
+  "title": "Caption Style Checker",
+  "artifact_class": "static-web",
+  "summary": "Check caption files before upload.",
+  "build_command": "npm run build",
+  "deploy": { "dist_dir": "dist" }
+}

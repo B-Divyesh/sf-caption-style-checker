@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sample-preflight",
+    "claim": "Loads a sample file and its warnings.",
+    "where": "landing primary action",
+    "test": "npm run test:browser -- --grep @claim:sample-preflight",
+    "sandbox": "demo sample data; assert reading speed, placement, and speaker findings"
+  },
+  {
+    "id": "local-caption-check",
+    "claim": "Files stay in this browser.",
+    "where": "landing fact and privacy page",
+    "test": "npm run test:browser -- --grep @claim:local-caption-check",
+    "sandbox": "demo flow; intercept every request and assert only this app origin is used"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "Works offline after one visit.",
+    "where": "landing fact",
+    "test": "npm run test:browser -- --grep @claim:offline-reload",
+    "sandbox": "load /demo, wait for its service worker, set the browser offline, then reload"
+  },
+  {
+    "id": "free-to-use",
+    "claim": "Free to use.",
+    "where": "landing fact",
+    "test": "npm run test:browser -- --grep @claim:free-to-use",
+    "sandbox": "landing page; assert the displayed price fact and absence of payment controls"
+  }
+]
