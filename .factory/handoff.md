@@ -1,224 +1,57 @@
-# Caption Style Checker polish-1 handoff
+# Caption Style Checker verification handoff
 
-## Delivered
+## Verdict
 
-All twelve findings in `.factory/review-1.md` are resolved. The repair is
-commit `d897449e1b02063f37a51078c33e6f8f8188df5b`, pushed to `origin/main` and
-deployed as Azure Static Web Apps deployment
-`4fecc662-fe00-415d-b1e9-2993ace43b8c`.
+**FAIL — candidate `e3f0512347e1f4d87bfcfe1c9c7e3a5d51327c7f` must not be
+released.** Fresh verification on 2026-08-29 tested the candidate and
+https://caption-style-checker.sociobot.in. The deployment matches the candidate;
+this is not a deployment-only failure.
 
-The release keeps the pixel/demoscene signal-desk identity while replacing
-unverifiable platform claims with clear local review behavior. It now has a
-complete 11-item claims inventory, observable tagged tests, a mobile-safe
-first screen, precise timed-TTML copy, route-specific metadata, a true social
-image and Apple icon, plain legal copy, and visibly marked external footer
-link. The one-click `/demo` and `?demo=1` paths retain their isolated,
-memory-only sample state with reset and exit controls.
+The release blocker is functional: a mixed SRT with one valid cue and one
+malformed timestamp silently drops the malformed cue and reports **Ready to
+publish**. Invalid `61`/`63` second fields are also accepted as ready. The
+required selected-platform semantics and several accessible preview styles are
+not implemented. Additional medium findings cover valid TTML offset timing,
+TTML speaker detection, and lost keyboard focus.
 
-## Exact verification evidence
+Full evidence, reproductions, passing checks, severity, and next steps are in
+`.factory/verification-3.md`.
 
-Fresh clone: `/tmp/caption-style-checker-clean-5166690211271171561eacc574bf815bb7764f67`
-at commit `d897449`:
+## Verification summary
 
-```sh
-npm ci
-# each exact command listed in .factory/claims.json (11 total)
-npm run test:browser -- --grep @claim:sample-preflight
-npm run test:browser -- --grep @claim:local-caption-check
-npm run test:browser -- --grep @claim:offline-reload
-npm run test:browser -- --grep @claim:free-to-use
-npm run test:browser -- --grep @claim:caption-formats
-npm run test:browser -- --grep @claim:report-export
-npm run test:browser -- --grep @claim:profile-review-findings
-npm run test:browser -- --grep @claim:caption-check-categories
-npm run test:browser -- --grep @claim:reading-speed-threshold
-npm run test:browser -- --grep @claim:real-session-refresh
-npm run test:browser -- --grep @claim:demo-memory-isolation
-npm test
-npm run build
+- All 11 exact installed claim commands passed, one tagged test each.
+- `npm ci`, audit, typecheck, lint, `npm test` (13 Vitest + 23 Playwright), and
+  the exact candidate-keyed production build passed.
+- Live and candidate JS match after normalizing only the expected worker build
+  version; CSS and service worker match byte for byte.
+- Fresh desktop and 390px sessions passed demo isolation, export, file picker,
+  drag/drop, oversize recovery, privacy request logging, offline reload,
+  service-worker replacement, routes, headers, caching, axe, reduced motion,
+  touch targets, 200% text sizing, and console/page-error checks.
+- Axe found zero WCAG 2 A/AA violations at desktop and mobile. Lighthouse mobile
+  scored 99 Performance and 100 Accessibility/Best Practices/SEO, with 1.45 s
+  LCP, 0 CLS, and 127 ms total blocking time.
+
+## Reproduce the primary blocker
+
+Open `/demo`, replace the sample with:
+
+```srt
+1
+00:00:01,000 --> 00:00:03,000
+JORDAN: Valid cue.
+
+2
+00:00:AA,000 --> 00:00:07,000
+MORGAN: This cue is silently malformed.
 ```
 
-Every command passed. The full suite had 13 Vitest/release tests and 23
-Playwright tests. The production build produced `dist/` with 16.75 kB JS
-(6.47 kB gzip) and 9.36 kB CSS (2.88 kB gzip).
+Choose **Check captions**. The candidate reports one SRT cue and **Ready to
+publish** instead of reporting the malformed second cue.
 
-Post-deploy, `verify-url.sh https://caption-style-checker.sociobot.in/demo
-.factory/evidence/live-d897449` passed: title, `lang=en`, one H1, main
-landmark, image alt coverage, named buttons, and no console/page errors. Fresh
-live desktop and 390×844 contexts had zero serious/critical Axe WCAG 2 A/AA
-violations. The live demo reloaded offline after service-worker control.
-Routes `/`, `/demo`, `/privacy`, and `/terms` returned 200; the unknown route
-returned 404. The social JPEG and Apple touch icon returned 200. Live evidence
-and screenshots are under `.factory/evidence/live-d897449/`.
+## Handoff state
 
-## Known gaps
-
-None. The checker intentionally supports timed TTML paragraphs rather than a
-full TTML rendering engine; all visitor copy says “timed TTML” and tests that
-scope.
-
-See `.factory/polish-1.md` for the required F-1-1 through F-1-12 mapping.
-
----
-
-# Previous review handoff (superseded)
-
-## Review outcome (2026-08-29 UTC): FAIL
-
-This reviewer made no product-code changes. The requested adversarial review is
-in `.factory/review-1.md` and identifies four blocking claim-inventory/testing
-findings plus eight minor mobile-copy, metadata, and external-link findings.
-The review commit contains only this handoff and the review report.
-
-## How verified
-
-From a fresh clone of candidate `29b9efe692d1281cd2d70a6e83c7974376b1b875`:
-
-```sh
-npm ci
-npm run test:browser -- --grep @claim:sample-preflight
-npm run test:browser -- --grep @claim:local-caption-check
-npm run test:browser -- --grep @claim:offline-reload
-npm run test:browser -- --grep @claim:free-to-use
-npm run test:browser -- --grep @claim:caption-formats
-npm run test:browser -- --grep @claim:report-export
-npm test
-npm run build
-```
-
-All commands passed. Fresh live desktop and 390 px browser contexts verified
-first-read clarity, the one-click demo, reset/exit storage isolation, request
-origin, offline reload, routes, back-button focus, status codes, and Axe WCAG
-2 A/AA. Those passing checks do not close the claim-audit defects described in
-the review.
-
-## Next steps
-
-Resolve every F-1-* item in `.factory/review-1.md`, deploy the repaired build,
-and have a new reviewer run the complete checklist from a clean state. Do not
-mark this candidate accepted until the review has zero findings.
-
----
-
-# Previous repair handoff (superseded by review-1)
-
-## Independent re-verification (2026-08-29 UTC): PASS
-
-**Candidate `5166690211271171561eacc574bf815bb7764f67` is accepted at
-https://caption-style-checker.sociobot.in.** A clean-checkout verifier ran all
-six declared claim commands, the complete local suite, type/lint checks, and
-the exact production build. Fresh live desktop and 390px sessions passed
-functional, privacy/request-log, keyboard, offline/service-worker, header,
-axe, and Lighthouse checks. There are no known release-blocking defects.
-
-The full independent evidence is in `.factory/verification-2.md`.
-
-## Repair scope
-
-This repair addresses the independent verifier report in commit
-`e4b4e74e290ae1b41ffb3aa86dc05eb5bdf5087a` for candidate
-`dba7c26bbbbd3f573c0b08709292ee0b5d19b57d`. The product remains a Vite and
-TypeScript static web app with `dist/` as its deployment root.
-
-## What changed
-
-- Timed TTML `begin` and `end` attributes no longer trigger a placement
-  warning. Only explicit TTML layout attributes such as `region`,
-  `tts:textAlign`, and `tts:origin` are treated as placement settings.
-- Demo source is isolated in memory. Visitors can edit and check it, reset it
-  to the shipped WebVTT, and leave without reading or overwriting the saved
-  real-mode caption.
-- The public WebVTT, SRT, timed-TTML, and report-export promises are now listed
-  in `.factory/claims.json`. Each of the six claims has exactly one tagged
-  observable browser test.
-- Every build registers a versioned service worker. New workers delete older
-  product caches, and navigations use the network first with an offline cache
-  fallback. This prevents a previous shell from masking a new release.
-- Keyboard focus is visible around the full file-picker target. SPA navigation
-  focuses and announces the destination H1. Mobile controls are at least
-  44 CSS pixels in both dimensions.
-- Empty and parse-error results clear the prior cue preview.
-- Azure Static Web Apps now rewrites only the four real SPA routes. Unknown
-  paths use a built `404.html` and return HTTP 404 instead of 200.
-- Package version is `1.0.1`; Playwright is pinned to `1.58.2` as required.
-
-## Verification evidence
-
-Run from `/work/repo` on 2026-08-29 UTC:
-
-```sh
-npm ci
-npm audit --audit-level=high
-npm run lint
-npm run typecheck
-npm run test:unit
-npm run test:browser
-npm run build
-```
-
-- Clean install: 58 packages installed; audit reported 0 vulnerabilities.
-- Type/lint: both `tsc --noEmit` commands passed.
-- Unit and release contracts: 12 passed. These include the exact timing-only
-  TTML regression, a positive TTML placement fixture, claim-tag uniqueness,
-  cache update policy, and the HTTP-404 configuration.
-- Playwright: 17 passed at desktop and 390×844 mobile. Coverage includes all
-  six claim commands, demo edit/reset/exit isolation, stale-preview removal,
-  file-picker and route focus, back-end-free privacy requests, offline reload,
-  stale-cache refresh, real URLs, reduced motion, touch targets, and console
-  errors.
-- Axe 4.11: 0 serious or critical WCAG 2 A/AA violations on `/demo` at desktop
-  and 390 px.
-- Worker `verify-url.sh` against the SWA emulator: title
-  `Demo — Caption Style Checker`, `lang=en`, one H1, one main landmark, no
-  missing alt text, no unnamed buttons, and 0 console/page errors.
-- SWA emulator: `/`, `/demo`, `/privacy`, and `/terms` returned 200;
-  `/not-a-real-page` returned 404; offline `/demo` reloaded to “Check sample
-  captions”; CSP, `nosniff`, referrer policy, HSTS, and immutable hashed-asset
-  caching were present.
-- Mobile Lighthouse on `/demo`: Performance 100, Accessibility 100, Best
-  Practices 100, SEO 100; LCP 1.1 s, CLS 0, total blocking time 0 ms.
-- Production output: JavaScript 15.54 kB / 6.31 kB gzip; CSS 9.18 kB / 2.84 kB
-  gzip; generated hero WebP 35.10 kB. All are below the static-product budgets.
-- Package/consumer testing does not apply to this static-web artifact. There
-  is no backend, authentication provider, payment flow, or AI runtime to test.
-
-## Deployment
-
-The repair is configured for Azure Static Web Apps at
-`https://caption-style-checker.sociobot.in` using:
-
-```sh
-/opt/fleet/lib/deploy-static.sh caption-style-checker dist
-```
-
-Implementation commit `b933bc4757ba5bca664114dcc8ebec7feb94a168` was pushed to
-`origin/main` and deployed successfully on 2026-08-29 UTC. Azure deployment ID:
-`9d7332db-a290-45f7-8982-b947f505c1cd`.
-
-Post-deploy evidence:
-
-- `verify-url.sh` against the live `/demo` returned 200 in 568 ms with the
-  correct title and language, one H1, one main landmark, complete image alt
-  text, named buttons, and 0 console/page errors.
-- Fresh live desktop and 390×844 sessions each had 0 Axe WCAG 2 A/AA
-  violations, 0 console errors, one H1, and no horizontal overflow.
-- The live timing-only TTML fixture rendered as TTML with no placement warning;
-  a custom demo SRT remained editable after checking.
-- A fresh live service worker cached `/demo`, which then reloaded offline with
-  the sample heading intact. The exercised demo flow made only same-origin
-  requests.
-- Live status checks returned 200 for `/`, `/demo`, `/privacy`, `/terms`,
-  robots, sitemap, manifest, and favicon; `/not-a-real-page` returned 404. All
-  internal links and the Param Factory footer link resolved successfully.
-- Live CSP, HSTS, `nosniff`, strict referrer policy, `frame-ancestors 'none'`,
-  same-origin `connect-src`, and immutable hashed-asset caching are present.
-- SHA-256 hashes match the deployed build byte for byte: HTML
-  `479d4be5…a7fb`, JavaScript `1edc1031…8ca`, CSS `48ba4637…f630`, service
-  worker `df4c2e7a…750bb`, and hero WebP `878f72db…b45cd`.
-
-## Known limits
-
-The parser intentionally supports useful timed TTML paragraphs rather than all
-TTML inheritance and styling rules. Platform profiles remain conservative
-preflight guidance because publisher behavior can change. No verifier finding
-is left open.
+Only verification documentation was changed. Product code was not modified.
+The repository remains buildable. Repair F-V3-1 through F-V3-7 in
+`.factory/verification-3.md`, deploy the repair, then repeat independent
+verification before release.
