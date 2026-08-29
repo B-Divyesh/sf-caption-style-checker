@@ -1,73 +1,65 @@
-# Caption Style Checker — polish round 4 handoff
+# Caption Style Checker — independent verification 10 handoff
 
-**Result:** complete; no review finding remains.
+**Result: PASS — release accepted.**
 
-**Work order:** `caption-style-checker-polish-4`
-
-**Repair commit:** `b57be7192c2a50a06712ef548e6aec1ea065aee2`
-
-**Deployment:** `05516cfe-e500-44c3-9b13-66302ce1ed24`
+**Candidate:** `b201c705985b30cc5363aaa8870eda4af836f42c`
 
 **Live URL:** <https://caption-style-checker.sociobot.in>
 
-## What changed
+**Verified:** 29 August 2026 UTC
 
-- Removed the round-four untestable platform-change assertion from the landing
-  profile note, scope section, README, and copy audit. The useful instruction
-  “Review the final upload before publishing” remains.
-- Added source and browser regressions for F-4-1.
-- Rechecked every earlier review and polish finding against current source,
-  clean-clone tests, and the deployed product. The detailed one-row-per-ID map
-  is in `.factory/polish-4.md`.
-- Updated the catalog line to “Check WebVTT, SRT, and timed TTML captions before
-  publishing.” It is verb-first and 61 characters.
-- Added a repeatable live audit at `scripts/audit-live.mjs`.
+## What was done
 
-The static-web artifact class, local-first behavior, and pixel/demoscene signal
-desk identity are unchanged.
+- Ran every exact command in `.factory/claims.json` before broader inspection;
+  all 13 claim tests passed through the documented demo entry point.
+- Performed the cold first-read gate on the live desktop and 390 px mobile
+  product. The job, audience, sample action, outcome, and three facts are clear
+  without scrolling.
+- Installed the locked dependencies from the clean checkout and ran the full
+  unit, browser, type, lint, and production-build gates.
+- Exercised live upload, paste, drag-and-drop, parsing,
+  platform selection, export, invalid input, exact thresholds, large files,
+  reset/exit/undo, persistence isolation, offline reload, service-worker update,
+  keyboard navigation, focus, reduced motion, 200% text, and 320/390 px reflow.
+- Captured Playwright request and response data, route/link status, headers,
+  cache behavior, console/page errors, Axe results, and Lighthouse metrics.
+- Rebuilt the candidate using the deployed build ID and matched the live HTML,
+  JS, CSS, worker, 404, images, icons, manifest, robots, and sitemap
+  byte-for-byte.
+- Changed no product code.
 
-## Exact verification evidence
+## Verification summary
 
-- Clean clone of repair commit: `npm ci` passed with zero vulnerabilities.
-  All 13 exact commands from `.factory/claims.json` passed individually.
-- `npm test` passed: 36 unit/release tests and 38 Playwright tests.
-- `npm run typecheck`, `npm run lint`, and `npm run build` passed.
-- Build output: `dist/`; application JavaScript 25.46 KB raw / 9.38 KB gzip;
-  CSS 10.64 KB raw / 3.13 KB gzip.
-- Live worker verifier:
-  `.factory/evidence/polish-4-live/verify-url/verify.json` reports a 784 ms
-  cold load, one h1, `lang=en`, one main, zero missing alt text, zero unlabeled
-  buttons, and zero console errors.
-- Live cumulative audit:
-  `.factory/evidence/polish-4-live/live-audit.json` has `failures: []`.
-  Root, demo, privacy, and terms returned 200; the product 404 returned 404.
-  All 10 desktop/mobile Axe scans had zero violations. Every cumulative runtime
-  finding is `true`; demo traffic used only this origin; reset, exit, export,
-  offline reload, focus, metadata, security headers, and 200% text sizing
-  passed.
-- Mobile first-screen bounds ended at 489 px in an 844 px viewport:
-  `.factory/evidence/polish-4-live/root-mobile-cold.png`.
-- Live demo and banner:
-  `.factory/evidence/polish-4-live/demo-desktop-cold.png`.
-- Lighthouse mobile:
-  `.factory/evidence/polish-4-live/lighthouse.json` reports Performance 99,
-  Accessibility 100, Best Practices 100, SEO 100, LCP 1.2 s, TBT 100 ms, and
-  CLS 0.
-
-## Run and verify
-
-```sh
-npm ci
-npm test
-npm run typecheck
-npm run lint
-npm run build
-node scripts/audit-live.mjs https://caption-style-checker.sociobot.in .factory/evidence/polish-4-live
+```text
+npm ci             PASS — 58 packages, 0 vulnerabilities
+13 claim commands  PASS — 13/13
+npm test           PASS — 36 Vitest + 38 Playwright tests
+npm run typecheck  PASS
+npm run lint       PASS
+npm run build      PASS — dist/ produced
+live Axe matrix    PASS — 0 violations on 5 routes × 2 viewports
+verify-url.sh      PASS — 0 console/page errors
+Lighthouse mobile PASS — 100/100/100/100; LCP 1.1 s; CLS 0
+deployment match  PASS — checked artifacts byte-identical
 ```
 
-The direct isolated sample URL is
-<https://caption-style-checker.sociobot.in/?demo=1>.
+Application JavaScript is 25.43 KB raw / 9.36 KB gzip; CSS is 10.64 KB raw /
+3.13 KB gzip; the hero is 35.10 KB. The full Lighthouse transfer was 50,310
+bytes.
 
-## Known gaps and next steps
+Detailed results and the claim-by-claim matrix are in
+[`verification-10.md`](verification-10.md). Browser artifacts are under
+[`evidence/verification-10`](evidence/verification-10/), including the raw
+[`claims.log`](evidence/verification-10/claims.log) transcript.
 
-None. No finding, minor item, TODO, or deployment mismatch is deferred.
+## Defects and remaining work
+
+- Critical / release-blocking: none.
+- High: none.
+- Medium: none.
+- Low: none.
+- Known gaps or deferred product work: none.
+
+The product is a static local-first PWA with no server endpoint, unlock call,
+authentication, payment, runtime AI, library package, or CLI. Server rate-limit,
+Entra sign-in, backend concurrency, and consumer-package checks do not apply.
