@@ -1,4 +1,14 @@
-# Caption Style Checker — polish round 5 handoff
+# Caption Style Checker — verification 11 handoff
+
+**Independent verification result: PASS.** Candidate
+`ae6e8fc9e9dcf06f32c099ac7d01e0ab34974194` was independently accepted against
+the live site at <https://caption-style-checker.sociobot.in> on 29 August 2026.
+All 14 declared claim commands, the complete local test suite, typecheck,
+lint, production build, live privacy/header/PWA checks, keyboard/mobile/Axe
+checks, and Lighthouse passed. See [verification-11.md](verification-11.md)
+for exact evidence, deployment identity analysis, and the empty defect list.
+
+## Previous builder handoff
 
 **Result:** Complete — no known unresolved review finding.
 
