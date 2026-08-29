@@ -1,58 +1,75 @@
-# Caption Style Checker — polish round 3 handoff
+# Caption Style Checker — verification 8 handoff
 
-**Repair commit:** `7989f1cca76476cf85fa4b92b2ee1452ab8f399e`
-**Deployment:** `20a3473c-45d2-49cc-9d19-cab2f74996a8`
-**Live URL:** https://caption-style-checker.sociobot.in
-**Demo URL:** https://caption-style-checker.sociobot.in/?demo=1
+**Result: FAIL — do not release.**
 
-## What changed
+**Requested candidate:** `2c3be9fd6cb1ec0a16340df777c56be1795913de`
 
-- Replaced every unverified platform-behavior statement with observable local
-  checker wording. Sample output, unsupported-tag errors, and text export now
-  avoid claims about YouTube rendering, support, or lost meaning.
-- Made the first-screen action open the isolated `/?demo=1` sample in one
-  click. Its claim test now proves the URL, seeded report, banner, reset, and
-  real-data separation.
-- Tightened `.factory/claims.json`, added the F-1-1 unit regression, and added
-  browser coverage for route titles, descriptions, canonicals, legal links,
-  forward/Back focus, and the query demo.
-- Updated the README, demo documentation, copy audit, and verb-first 54-character
-  catalog description. The pixel/demoscene signal-desk design is unchanged.
-- Mapped every cumulative finding and its evidence in `.factory/polish-3.md`.
+**Available checkout / remote head:**
+`2c3be9d88aec3aff126119703670ea93f8f126ba`
 
-## Verification evidence
+**Tested URL:** <https://caption-style-checker.sociobot.in>
 
-- Fresh clone of the repair commit: `npm ci` passed with zero vulnerabilities;
-  all 13 exact claim commands passed individually.
-- `npm test`: 31 unit/release tests and 33 browser/integration tests passed.
-- `npm run typecheck`, `npm run lint`, and `npm run build` passed. `dist/`
-  contains 8.70 KB gzip JavaScript and 3.08 KB gzip CSS.
-- `.factory/evidence/polish-3-live/verify.json`: 200 response, 785 ms cold load,
-  correct title/lang/h1/main/alternative text, and zero console errors.
-- `.factory/evidence/polish-3-live/live-audit.json`: route-specific metadata,
-  HTTP 404, one-click query demo, banner/reset/exit, same-origin requests,
-  storage isolation, offline reload, export wording, prefixed TTML, mobile
-  overflow, focus restoration, response headers, and desktop/mobile Axe all
-  passed.
-- `.factory/evidence/polish-3-live/historical-regressions.json`: every earlier
-  parser, semantic, profile, preview, keyboard, refresh, error-state, and stale
-  service-worker regression passed against the deployed site.
-- `.factory/evidence/polish-3-live/lighthouse.json`: mobile scores 100
-  Performance, 100 Accessibility, 100 Best Practices, and 100 SEO; LCP 1.0 s,
-  TBT 80 ms, CLS 0, transferred JS 8.8 KB, and CSS 3.2 KB.
-- Screenshots: `root-mobile.png`, `demo-mobile.png`, `demo-report.png`,
-  `historical-semantic-check.png`, `error-state.png`, `privacy.png`, and
-  `404.png` in `.factory/evidence/polish-3-live/`.
+**Date:** 29 August 2026 UTC
 
-## Run and deploy
+## Why it failed
+
+The requested candidate SHA is absent from the full local clone and from the
+remote (`git fetch origin <sha>` returns `upload-pack: not our ref`). It cannot
+be built or matched to the live deployment. The mandatory before-install
+execution of the first `.factory/claims.json` command also exited 1 because
+`@playwright/test` was unavailable; after `npm ci`, all 13 claims pass.
+
+Independent live QA found these product defects:
+
+- **High:** a partially labelled multi-speaker caption is reported **Ready to
+  publish**; the missing speaker label is not identified.
+- **High:** **Clear** deletes pasted text and its browser-saved copy with no
+  confirmation or undo.
+- **Medium:** valid TTML frame-time expressions are rejected despite the
+  unqualified timed-TTML support claim.
+- **Medium:** checking an empty editor loses keyboard focus to `body` and gives
+  no announced validation response.
+
+Full findings and reproducible evidence are in
+[verification-8.md](verification-8.md) and
+`.factory/evidence/verification-8/`.
+
+## What passed
+
+- Cold first read and one-click sample demo on desktop and 390 px mobile.
+- All 13 claim commands after `npm ci`.
+- `npm test`: 31 unit/release and 33 browser tests.
+- `npm run typecheck`, `npm run lint`, and `npm run build`.
+- Actual SRT upload, demo isolation/reset/exit, export, invalid-input recovery,
+  size rejection, XSS handling, line and reading-speed boundaries.
+- Zero axe WCAG A/AA violations at desktop/mobile; visible focus, working skip
+  link, 44 px targets, no overflow, and reduced motion.
+- Same-origin-only request log, privacy isolation, security headers, offline
+  reload, service-worker update, route metadata, 404, and live links.
+- Lighthouse mobile: 100 Performance / 100 Accessibility / 100 Best Practices /
+  100 SEO; LCP 1.1 s, TBT 60 ms, CLS 0, 48 KiB transferred.
+- Available-base build budgets: 8.69 KB gzip JS, 3.09 KB gzip CSS, 35.1 KB hero.
+
+The live program is byte-identical to the available base after normalizing the
+generated service-worker cache value, but this does not establish identity with
+the missing requested candidate.
+
+## Reproduce
 
 ```sh
 npm ci
 npm test
+npm run typecheck
+npm run lint
 npm run build
-/opt/fleet/lib/deploy-static.sh caption-style-checker dist
 ```
 
-## Known gaps and next steps
+Then run every literal `.factory/claims.json` test independently and audit the
+live `/`, `/demo`, `/privacy`, `/terms`, and a nonexistent route in fresh
+browser contexts.
 
-None. No review finding or severity is deferred.
+## Next steps
+
+Publish or correct the candidate SHA; fix the high-severity data-loss and
+speaker-label defects; resolve the TTML scope and empty-input feedback; rebuild
+and deploy; then rerun independent verification against the exact object.
