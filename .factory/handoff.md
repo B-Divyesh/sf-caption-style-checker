@@ -1,4 +1,67 @@
-# Caption Style Checker review-1 handoff
+# Caption Style Checker polish-1 handoff
+
+## Delivered
+
+All twelve findings in `.factory/review-1.md` are resolved. The repair is
+commit `d897449e1b02063f37a51078c33e6f8f8188df5b`, pushed to `origin/main` and
+deployed as Azure Static Web Apps deployment
+`4fecc662-fe00-415d-b1e9-2993ace43b8c`.
+
+The release keeps the pixel/demoscene signal-desk identity while replacing
+unverifiable platform claims with clear local review behavior. It now has a
+complete 11-item claims inventory, observable tagged tests, a mobile-safe
+first screen, precise timed-TTML copy, route-specific metadata, a true social
+image and Apple icon, plain legal copy, and visibly marked external footer
+link. The one-click `/demo` and `?demo=1` paths retain their isolated,
+memory-only sample state with reset and exit controls.
+
+## Exact verification evidence
+
+Fresh clone: `/tmp/caption-style-checker-clean-5166690211271171561eacc574bf815bb7764f67`
+at commit `d897449`:
+
+```sh
+npm ci
+# each exact command listed in .factory/claims.json (11 total)
+npm run test:browser -- --grep @claim:sample-preflight
+npm run test:browser -- --grep @claim:local-caption-check
+npm run test:browser -- --grep @claim:offline-reload
+npm run test:browser -- --grep @claim:free-to-use
+npm run test:browser -- --grep @claim:caption-formats
+npm run test:browser -- --grep @claim:report-export
+npm run test:browser -- --grep @claim:profile-review-findings
+npm run test:browser -- --grep @claim:caption-check-categories
+npm run test:browser -- --grep @claim:reading-speed-threshold
+npm run test:browser -- --grep @claim:real-session-refresh
+npm run test:browser -- --grep @claim:demo-memory-isolation
+npm test
+npm run build
+```
+
+Every command passed. The full suite had 13 Vitest/release tests and 23
+Playwright tests. The production build produced `dist/` with 16.75 kB JS
+(6.47 kB gzip) and 9.36 kB CSS (2.88 kB gzip).
+
+Post-deploy, `verify-url.sh https://caption-style-checker.sociobot.in/demo
+.factory/evidence/live-d897449` passed: title, `lang=en`, one H1, main
+landmark, image alt coverage, named buttons, and no console/page errors. Fresh
+live desktop and 390×844 contexts had zero serious/critical Axe WCAG 2 A/AA
+violations. The live demo reloaded offline after service-worker control.
+Routes `/`, `/demo`, `/privacy`, and `/terms` returned 200; the unknown route
+returned 404. The social JPEG and Apple touch icon returned 200. Live evidence
+and screenshots are under `.factory/evidence/live-d897449/`.
+
+## Known gaps
+
+None. The checker intentionally supports timed TTML paragraphs rather than a
+full TTML rendering engine; all visitor copy says “timed TTML” and tests that
+scope.
+
+See `.factory/polish-1.md` for the required F-1-1 through F-1-12 mapping.
+
+---
+
+# Previous review handoff (superseded)
 
 ## Review outcome (2026-08-29 UTC): FAIL
 
