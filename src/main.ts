@@ -93,7 +93,9 @@ function bind() {
   document.querySelector('#demo')?.addEventListener('click', () => nav('/demo'));
   document.querySelector('#real')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; nav('/'); });
   document.querySelector('#reset-demo')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; activeCue = 0; render(); });
-  const textarea = document.querySelector<HTMLTextAreaElement>('#source'); const check = () => { if (textarea) updateSource(textarea.value); activeCue = 0; renderAndFocus('#report-title'); };
+  const textarea = document.querySelector<HTMLTextAreaElement>('#source');
+  textarea?.addEventListener('input', () => updateSource(textarea.value));
+  const check = () => { if (textarea) updateSource(textarea.value); activeCue = 0; renderAndFocus('#report-title'); };
   document.querySelector('#check')?.addEventListener('click', check); document.querySelector('#clear')?.addEventListener('click', () => { updateSource(''); activeCue = 0; render(); });
   document.querySelector<HTMLSelectElement>('#profile')?.addEventListener('change', e => { profile = (e.target as HTMLSelectElement).value; renderAndFocus('#profile'); });
   document.querySelector('#file')?.addEventListener('change', e => readFile((e.target as HTMLInputElement).files?.[0]));
@@ -114,7 +116,7 @@ function bind() {
   document.querySelector('#export')?.addEventListener('click', () => { if (!report) return; const body = [`Caption Style Checker`, `Publishing platform: ${report.profile}`, '', ...report.findings.map(f => `${f.level.toUpperCase()}${f.cue ? ` cue ${f.cue}` : ''}: ${f.title} — ${f.detail}`)].join('\n'); const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([body], { type: 'text/plain' })), download: 'caption-report.txt' }); a.click(); URL.revokeObjectURL(a.href); });
 }
 function readFile(file?: File) { if (!file) return; if (file.size > 2_000_000) { alert('This file is larger than 2 MB. Choose a smaller caption file.'); return; } const reader = new FileReader(); reader.onerror = () => alert('The file could not be read. Try choosing it again.'); reader.onload = () => { updateSource(String(reader.result || '')); activeCue = 0; render(); }; reader.readAsText(file); }
-if ('serviceWorker' in navigator) {
+function registerServiceWorker() {
   navigator.serviceWorker.addEventListener('message', event => { if (event.data?.type === 'shell-cached') (window as Window & { __captionShellCached?: boolean }).__captionShellCached = true; });
   navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(__BUILD_ID__)}`).then(async registration => {
     await navigator.serviceWorker.ready;
@@ -122,4 +124,5 @@ if ('serviceWorker' in navigator) {
     registration.active?.postMessage({ type: 'cache-page', urls });
   }).catch(() => {});
 }
+if ('serviceWorker' in navigator) window.addEventListener('load', () => window.setTimeout(registerServiceWorker, 0), { once: true });
 render();

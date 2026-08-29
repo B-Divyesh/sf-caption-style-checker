@@ -73,6 +73,16 @@ test('@claim:platform-review-findings applies the selected publishing platform r
   await expect(page.getByText('HTML video track needs WebVTT')).toBeVisible();
 });
 
+test('@claim:platform-rules-reviewed shows the dated source for each selected platform', async ({ page }) => {
+  await page.goto('/demo');
+  const note = page.locator('.profile-note');
+  await expect(note).toContainText('Rules reviewed 29 August 2026');
+  await expect(note.getByRole('link')).toHaveAttribute('href', /support\.google\.com\/youtube/);
+  await page.getByLabel('Publishing platform').selectOption('html');
+  await expect(note).toContainText('Rules reviewed 29 August 2026');
+  await expect(note.getByRole('link')).toHaveAttribute('href', /developer\.mozilla\.org/);
+});
+
 test('@claim:caption-check-categories shows every advertised check category', async ({ page }) => {
   await page.goto('/demo');
   for (const finding of ['words per minute', 'Long caption line', 'Styled text found', 'Check placement after YouTube upload', 'Check markup after YouTube upload', 'Speaker cue found']) {
@@ -99,6 +109,38 @@ MORGAN: This cue is silently malformed.`;
   await page.getByRole('button', { name: 'Check captions' }).click();
   await expect(page.getByText('Cue has an invalid timestamp')).toBeVisible();
   await expect(page.getByText('Ready to publish')).toHaveCount(0);
+});
+
+test('F-V4-1 preserves an unsubmitted pasted caption when the platform changes', async ({ page }) => {
+  const source = '1\n00:00:01,000 --> 00:00:03,000\nUNIQUE: edit';
+  await page.goto('/demo');
+  await page.getByLabel('Caption text').fill(source);
+  await page.getByLabel('Publishing platform').selectOption('html');
+  await expect(page.getByLabel('Caption text')).toHaveValue(source);
+});
+
+test('F-V4-2 reports unsupported WebVTT tags instead of ready to publish', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByLabel('Caption text').fill('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\n<foo>Meaning</foo>');
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByRole('heading', { name: '1 fix needed' })).toBeVisible();
+  await expect(page.getByText('Unsupported WebVTT tag')).toBeVisible();
+  await expect(page.getByText('Ready to publish')).toHaveCount(0);
+});
+
+test('F-V4-3 accepts timed TTML begin plus dur', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByLabel('Caption text').fill('<tt><body><div><p begin="1s" dur="2s">JORDAN: Duration.</p></div></body></tt>');
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.locator('.report .eyebrow')).toContainText('TTML · 1 cue · 3 sec');
+  await expect(page.getByText('Cue has an invalid timestamp')).toHaveCount(0);
+});
+
+test('F-V4-4 decodes character references in the cue preview', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByLabel('Caption text').fill('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nJORDAN: Fish &amp; chips &lt;fresh&gt; &#35;1');
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.locator('#preview-text')).toHaveText('JORDAN: Fish & chips <fresh> #1');
 });
 
 test('@claim:accessible-preview-styles compares three readable cue treatments', async ({ page }) => {
@@ -150,7 +192,6 @@ test('@claim:real-session-refresh keeps real caption text after a reload', async
   const realSource = '1\n00:00:10,000 --> 00:00:12,000\nSaved real caption.';
   await page.goto('/');
   await page.getByLabel('Caption text').fill(realSource);
-  await page.getByRole('button', { name: 'Check captions' }).click();
   await page.reload();
   await expect(page.getByLabel('Caption text')).toHaveValue(realSource);
 });

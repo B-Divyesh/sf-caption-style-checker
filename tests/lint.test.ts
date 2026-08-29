@@ -53,6 +53,19 @@ MORGAN: This cue is malformed.`;
       expect(result.findings.some(finding => finding.code === 'speaker-missing')).toBe(false);
     }
   });
+  it('F-V4-3 accepts a TTML begin plus dur timestamp', () => {
+    const result = lint('<tt><body><div><p begin="1s" dur="2s">JORDAN: Duration.</p></div></body></tt>');
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.cues[0]).toMatchObject({ start: 1, end: 3, text: 'JORDAN: Duration.' });
+      expect(result.findings.some(finding => finding.code === 'malformed-time')).toBe(false);
+    }
+  });
+  it('F-V4-4 decodes named and numeric character references in cue text', () => {
+    const result = parse('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nFish &amp; chips &lt;fresh&gt; &#35;1 &#x1F41F;');
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) expect(result.cues[0].text).toBe('Fish & chips <fresh> #1 🐟');
+  });
   it('gives an actionable parsing error for plain text', () => expect(parse('just words')).toHaveProperty('error'));
 });
 
@@ -70,6 +83,16 @@ describe('caption checks', () => {
     const result = lint('WEBVTT\n\n00:00:00.000 --> 00:00:02.000\n<v Sam><i>Read this</i>', 'youtube');
     expect('error' in result).toBe(false);
     if (!('error' in result)) expect(result.findings.some(f => f.code === 'unsupported-tag')).toBe(true);
+  });
+  it('F-V4-2 rejects unsupported WebVTT tags for every platform profile', () => {
+    const source = 'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\n<foo>Meaning</foo>';
+    for (const profile of ['youtube', 'html']) {
+      const result = lint(source, profile);
+      expect('error' in result).toBe(false);
+      if (!('error' in result)) {
+        expect(result.findings).toContainEqual(expect.objectContaining({ level: 'error', code: 'unsupported-tag', title: 'Unsupported WebVTT tag', cue: 1 }));
+      }
+    }
   });
   it('does not report placement for TTML timing attributes alone', () => {
     const result = lint('<tt><body><div><p begin="00:00:01.000" end="00:00:03.000">Hello world</p></div></body></tt>', 'youtube');

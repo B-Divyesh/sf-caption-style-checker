@@ -56,8 +56,18 @@ function ttmlTime(value: string): number {
   return clockTime(value);
 }
 
+function decodeCharacterReferences(value: string) {
+  return value.replace(/&(?:#(x[0-9a-f]+|\d+)|amp|lt|gt|quot|apos);/gi, (reference, numeric?: string) => {
+    if (!numeric) return ({ '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'" }[reference.toLowerCase()] || reference);
+    const radix = numeric[0].toLowerCase() === 'x' ? 16 : 10;
+    const codePoint = Number.parseInt(numeric.slice(radix === 16 ? 1 : 0), radix);
+    if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff)) return reference;
+    return String.fromCodePoint(codePoint);
+  });
+}
+
 function clean(value: string) {
-  return value.replace(/<br\s*\/?\s*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  return decodeCharacterReferences(value.replace(/<br\s*\/?\s*>/gi, ' ').replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim();
 }
 
 function blocks(source: string) {
@@ -94,16 +104,19 @@ export function parse(source: string): ParseResult {
       const attrs = match[1];
       const begin = /\bbegin=["']([^"']+)/i.exec(attrs)?.[1];
       const end = /\bend=["']([^"']+)/i.exec(attrs)?.[1];
+      const dur = /\bdur=["']([^"']+)/i.exec(attrs)?.[1];
       const start = begin ? ttmlTime(begin) : NaN;
-      const finish = end ? ttmlTime(end) : NaN;
+      const endTime = end ? ttmlTime(end) : NaN;
+      const duration = dur ? ttmlTime(dur) : NaN;
+      const finish = Number.isNaN(endTime) && !Number.isNaN(start) && !Number.isNaN(duration) ? start + duration : endTime;
       if (Number.isNaN(start) || Number.isNaN(finish)) {
-        findings.push(malformed(cueCount, `begin="${begin || ''}" end="${end || ''}"`));
+        findings.push(malformed(cueCount, `begin="${begin || ''}" end="${end || ''}" dur="${dur || ''}"`));
         continue;
       }
       const placement = attrs.match(/(?:^|\s)(?:region|tts:(?:textAlign|displayAlign|origin|extent|writingMode))\s*=\s*["'][^"']*["']/gi) || [];
       cues.push({ start, end: finish, text: clean(match[2]), raw: match[0], settings: placement.join(' '), number: cueCount });
     }
-    if (!cueCount) return { error: 'No timed <p> captions were found in this TTML file. Use begin and end attributes on each caption.' };
+    if (!cueCount) return { error: 'No timed <p> captions were found in this TTML file. Use begin with end or dur attributes on each caption.' };
     return { format, cues, cueCount, findings };
   }
 
@@ -162,6 +175,12 @@ export function lint(source: string, profile = 'youtube'): Report | { error: str
     if (selected.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Check placement after YouTube upload', detail: 'This cue uses placement or alignment settings. Preview the uploaded video because YouTube rendering can differ.', cue: cue.number });
     const tags = selected.tags ? cue.raw.match(selected.tags) || [] : [];
     if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Check markup after YouTube upload', detail: `This cue uses ${[...new Set(tags.map(tag => tag.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
+    if (parsed.format === 'WebVTT') {
+      const tagNames = [...cue.raw.matchAll(/<\/?([a-z][a-z0-9-]*)(?:[ .][^>]*)?>/gi)].map(match => match[1].toLowerCase());
+      const allowed = new Set(['b', 'i', 'u', 'c', 'v', 'ruby', 'rt', 'lang']);
+      const unsupported = [...new Set(tagNames.filter(name => !allowed.has(name)))];
+      if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported WebVTT tag', detail: `Remove ${unsupported.map(name => `<${name}>`).join(', ')}. It is not supported by ${selected.label}.`, cue: cue.number });
+    }
     if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: cue.number });
     if (/<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Check that speaker names remain visible after export.', cue: cue.number });
   });

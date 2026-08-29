@@ -35,6 +35,12 @@ describe('release contracts', () => {
     expect(worker.indexOf("if (e.request.mode === 'navigate')")).toBeLessThan(worker.indexOf('caches.match(e.request'));
   });
 
+  it('F-V4-6 defers service-worker cache work until after the initial page load', () => {
+    const app = readFileSync('src/main.ts', 'utf8');
+    expect(app).toContain("window.addEventListener('load', () => window.setTimeout(registerServiceWorker, 0), { once: true })");
+    expect(app.lastIndexOf('render();')).toBeGreaterThan(app.indexOf("window.addEventListener('load'"));
+  });
+
   it('F-V3-7 keeps the copy audit aligned with every previously omitted landing state', () => {
     const audit = readFileSync('.factory/copy-audit.md', 'utf8');
     for (const copy of [
