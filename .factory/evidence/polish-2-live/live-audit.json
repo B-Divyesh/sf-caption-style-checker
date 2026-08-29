@@ -1,0 +1,64 @@
+{
+  "routes": {
+    "/": {
+      "status": 200,
+      "title": "Caption Style Checker — Check captions before upload",
+      "h1": 1,
+      "main": 1,
+      "canonical": "https://caption-style-checker.sociobot.in/"
+    },
+    "/demo": {
+      "status": 200,
+      "title": "Demo — Caption Style Checker",
+      "h1": 1,
+      "main": 1,
+      "canonical": "https://caption-style-checker.sociobot.in/demo"
+    },
+    "/privacy": {
+      "status": 200,
+      "title": "Privacy — Caption Style Checker",
+      "h1": 1,
+      "main": 1,
+      "canonical": "https://caption-style-checker.sociobot.in/privacy"
+    },
+    "/terms": {
+      "status": 200,
+      "title": "Terms — Caption Style Checker",
+      "h1": 1,
+      "main": 1,
+      "canonical": "https://caption-style-checker.sociobot.in/terms"
+    },
+    "/not-a-real-page": {
+      "status": 404,
+      "title": "Page not found — Caption Style Checker",
+      "h1": 1,
+      "main": 1,
+      "canonical": "https://caption-style-checker.sociobot.in/not-a-real-page"
+    }
+  },
+  "viewports": {
+    "desktop": {
+      "errors": [],
+      "requestOrigins": [
+        "https://caption-style-checker.sociobot.in"
+      ],
+      "overflow": true,
+      "seriousOrCritical": []
+    },
+    "mobile": {
+      "errors": [],
+      "requestOrigins": [
+        "https://caption-style-checker.sociobot.in"
+      ],
+      "overflow": true,
+      "seriousOrCritical": []
+    }
+  },
+  "demo": {
+    "banner": "Demo — sample data, nothing is saved Reset demoStart for real",
+    "sampleFindings": 9,
+    "profile": "youtube",
+    "resetRestoresVtt": true,
+    "exitUrl": "https://caption-style-checker.sociobot.in/"
+  }
+}

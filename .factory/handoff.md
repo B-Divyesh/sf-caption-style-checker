@@ -2,7 +2,7 @@
 
 ## Outcome
 
-**Ready for deployment.** This repair resolves the sole blocker in adversarial
+**Deployed and verified.** This repair resolves the sole blocker in adversarial
 review 2 and preserves the repaired behaviors from every earlier review.
 Timed TTML now accepts the standard namespace-prefixed element form such as
 `<tt:tt>` and `<tt:p>`, including prefixed `span`, `br`, and `style` elements.
@@ -21,10 +21,10 @@ Timed TTML now accepts the standard namespace-prefixed element form such as
 - The catalog description is now the verb-first sentence “Check caption files
   before upload.”
 
-## Verification before deployment
+## Verification
 
 ```sh
-npm ci
+npm ci                              # clean clone; 0 audit vulnerabilities
 npm run test:unit                   # 30 passed
 npm run test:browser -- --grep @claim:caption-formats  # 1 passed
 npm run typecheck
@@ -32,9 +32,20 @@ npm run lint
 npm run build                        # dist/ with root index.html
 ```
 
-The complete clean-clone claim run, full browser/accessibility/privacy/offline
-suite, live deployment check, and the precise deployed commit are recorded in
-the deployment evidence appended to this file after deployment. See
+From a separate fresh clone of commit
+`8078e797c7a9c0c9c334a2694362553991cc0619`, all 13 literal commands from
+`.factory/claims.json` passed, followed by `npm test` (30 Vitest/release and
+32 Playwright tests), typecheck, lint, and `GITHUB_SHA=<commit> npm run build`.
+
+Deployment `58d39fb4-ea06-4892-8c63-73bf565bd11d` completed through the static
+work-order deployment. The cold live verifier at `/demo` returned HTTP 200 in
+576 ms with no console errors, one H1/main, `lang=en`, complete image alt text,
+and named buttons. The live prefixed-TTML reproduction produced
+`TTML · 1 cue · 3 sec` with no parse-error heading. Live desktop/mobile Axe
+WCAG 2 A/AA had zero serious or critical violations, no overflow or console
+errors, and only same-origin requests. Live route checks confirmed 200 for
+`/`, `/demo`, `/privacy`, `/terms` and a designed HTTP 404 for an unknown URL.
+Evidence is under `.factory/evidence/polish-2-live/`; see
 `.factory/polish-2.md` for the finding-by-finding map.
 
 ## Known gaps / next steps

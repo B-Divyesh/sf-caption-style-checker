@@ -1,7 +1,8 @@
 # Polish round 2 — cumulative review closure
 
-**Repair commit:** pending deployment commit  
-**Live URL:** https://caption-style-checker.sociobot.in  
+**Repair commit:** `8078e797c7a9c0c9c334a2694362553991cc0619`
+**Deployment:** `58d39fb4-ea06-4892-8c63-73bf565bd11d`
+**Live URL:** https://caption-style-checker.sociobot.in
 **Scope:** `.factory/review-1.md`, `.factory/review-2.md`, and every earlier
 `.factory/review-*.md` / `.factory/polish-*.md` finding.
 
@@ -48,9 +49,15 @@ format claim test, so a future regression cannot retain the timed-TTML claim.
 
 ## Evidence locations
 
-- Local production build and test output: current work-order terminal logs.
+- Clean-clone evidence: all 13 exact claim commands, then `npm test` (30
+  Vitest/release + 32 Playwright), typecheck, lint, and commit-stamped build.
 - Post-deploy URL verifier and desktop/mobile screenshots:
   `.factory/evidence/polish-2-live/`.
 - Post-deploy browser audit screenshot: `.factory/evidence/polish-2-live/prefixed-ttml-demo.png`.
+
+The cold live prefixed fixture rendered `TTML · 1 cue · 3 sec` with zero parse
+error headings and zero console errors. `live-audit.json` records the 200/404
+route matrix, route titles/canonicals, demo reset/exit, same-origin requests,
+zero serious/critical Axe violations, and zero mobile overflow.
 
 No finding is deferred or marked minor for later work.
