@@ -1,0 +1,161 @@
+{
+  "base": "https://caption-style-checker.sociobot.in",
+  "checkedAt": "2026-08-29T20:05:50.774Z",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/demo",
+      "status": 200
+    },
+    {
+      "path": "/privacy",
+      "status": 200
+    },
+    {
+      "path": "/terms",
+      "status": 200
+    },
+    {
+      "path": "/not-a-real-page",
+      "status": 404
+    }
+  ],
+  "externalLinks": [
+    {
+      "url": "https://support.google.com/youtube/answer/2734698?hl=en",
+      "status": 200
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API/Web_Video_Text_Tracks_Format",
+      "status": 200
+    },
+    {
+      "url": "https://sociobot.in",
+      "status": 200
+    }
+  ],
+  "axe": [
+    {
+      "path": "/",
+      "viewport": "desktop",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/",
+      "viewport": "mobile",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/demo",
+      "viewport": "desktop",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/demo",
+      "viewport": "mobile",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/privacy",
+      "viewport": "desktop",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/privacy",
+      "viewport": "mobile",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/terms",
+      "viewport": "desktop",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/terms",
+      "viewport": "mobile",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/not-a-real-page",
+      "viewport": "desktop",
+      "violations": 0,
+      "serious": 0
+    },
+    {
+      "path": "/not-a-real-page",
+      "viewport": "mobile",
+      "violations": 0,
+      "serious": 0
+    }
+  ],
+  "historicalFindings": {
+    "F-1-5": true,
+    "F-1-6": true,
+    "F-1-7": true,
+    "F-1-8": true,
+    "F-4-1": true,
+    "F-1-12": true,
+    "F-1-9": true,
+    "F-1-2": true,
+    "F-V3-4": true,
+    "F-1-1": true,
+    "F-V4-5": true,
+    "F-V3-5": true,
+    "F-1-3": true,
+    "F-V3-1": true,
+    "F-V3-2": true,
+    "F-V3-3": true,
+    "F-V3-6": true,
+    "F-V4-1": true,
+    "F-V4-2": true,
+    "F-V4-3": true,
+    "F-V4-4": true,
+    "F-V5-1": true,
+    "F-2-1": true,
+    "F-1-4": true,
+    "F-V4-6": true,
+    "F-1-11": true,
+    "F-V5-2": true
+  },
+  "stableAssetCache": {
+    "/assets/signal-desk.webp": "public, max-age=0, must-revalidate",
+    "/assets/caption-checker-social.jpg": "public, max-age=0, must-revalidate"
+  },
+  "firstScreen": {
+    "bottoms": [
+      276,
+      369.5625,
+      439.5625,
+      488.5625
+    ],
+    "badPlatformChangeCopy": false,
+    "finalUploadGuidanceCount": 2
+  },
+  "demo": {
+    "requestOrigins": [
+      "https://caption-style-checker.sociobot.in"
+    ],
+    "reset": true,
+    "exitRestoresReal": true,
+    "export": true,
+    "prefixedTtml": true
+  },
+  "securityHeaders": {
+    "contentSecurityPolicy": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "noSniff": "nosniff"
+  },
+  "offlineReload": true,
+  "textResize200": true,
+  "failures": []
+}
