@@ -8,7 +8,7 @@ reading speed, long lines, speaker labels, styled text, placement cues, and
 markup a selected platform may flatten.
 
 Try the isolated sample at `/demo`. It loads a short lesson intro and its
-warnings. The sample is in memory and nothing is saved.
+warnings. Sample edits stay in memory and are discarded when real mode starts.
 
 ## Run it
 
@@ -18,7 +18,8 @@ npm run dev
 ```
 
 Open the local URL that Vite prints. Use `npm test` for parser and browser
-tests. Use `npm run build` to create the deployable `dist/` directory.
+tests. Use `npm run lint` and `npm run typecheck` for static checks. Use
+`npm run build` to create the deployable `dist/` directory.
 
 ## Privacy and scope
 

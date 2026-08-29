@@ -39,7 +39,8 @@ export function parse(source: string): { format: Format; cues: Cue[] } | { error
     for (const m of source.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)) {
       const attrs = m[1], begin = /\bbegin=["']([^"']+)/i.exec(attrs)?.[1], end = /\bend=["']([^"']+)/i.exec(attrs)?.[1];
       const start = begin ? time(begin) : NaN, finish = end ? time(end) : NaN;
-      if (!Number.isNaN(start) && !Number.isNaN(finish)) cues.push({ start, end: finish, text: clean(m[2]), raw: m[0], settings: attrs });
+      const placement = attrs.match(/(?:^|\s)(?:region|tts:(?:textAlign|displayAlign|origin|extent|writingMode))\s*=\s*["'][^"']*["']/gi) || [];
+      if (!Number.isNaN(start) && !Number.isNaN(finish)) cues.push({ start, end: finish, text: clean(m[2]), raw: m[0], settings: placement.join(' ') });
     }
     return cues.length ? { format, cues } : { error: 'No timed <p> captions were found in this TTML file. Use begin and end attributes on each caption.' };
   }
