@@ -1,0 +1,14 @@
+{
+  "method": "Double every rendered computed font size after loading /demo",
+  "desktop": {
+    "viewport": "1440x900",
+    "clippedTextElements": 0,
+    "horizontalOverflow": false
+  },
+  "mobile": {
+    "viewport": "390x844",
+    "clippedTextElements": 0,
+    "horizontalOverflow": true,
+    "note": "Synthetic text-only enlargement exceeds the 320 CSS pixel reflow floor; all content and controls remain reachable. The separate 320 CSS pixel reflow check has no horizontal overflow."
+  }
+}

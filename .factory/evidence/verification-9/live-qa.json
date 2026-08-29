@@ -1,0 +1,375 @@
+{
+  "base": "https://caption-style-checker.sociobot.in",
+  "generatedAt": "2026-08-29T18:47:55.876Z",
+  "results": [
+    {
+      "name": "cold first screen",
+      "status": "PASS",
+      "detail": "what, audience, outcome, and one-click sample are visible above the fold"
+    },
+    {
+      "name": "one-click sample demo",
+      "status": "PASS",
+      "detail": "11 sample findings rendered"
+    },
+    {
+      "name": "demo isolation and reset",
+      "status": "PASS",
+      "detail": "demo edit discarded; real storage restored"
+    },
+    {
+      "name": "real-mode file upload and persistence",
+      "status": "PASS",
+      "detail": "SRT picker path parsed 2 cues and survived refresh"
+    },
+    {
+      "name": "partial speaker labels cannot report ready",
+      "status": "PASS",
+      "detail": "cue 2 receives Speaker label missing warning"
+    },
+    {
+      "name": "reading-speed exact boundary",
+      "status": "PASS",
+      "detail": "180 WPM passes; 186 WPM warns"
+    },
+    {
+      "name": "line-length exact boundary",
+      "status": "PASS",
+      "detail": "42 characters pass; 43 characters warn"
+    },
+    {
+      "name": "frame-timed TTML",
+      "status": "PASS",
+      "detail": "30 fps clock-time expression accepted"
+    },
+    {
+      "name": "platform-specific format check",
+      "status": "PASS",
+      "detail": "HTML profile rejects SRT and control remains operable"
+    },
+    {
+      "name": "invalid input and recovery",
+      "status": "PASS",
+      "detail": "clear undo, empty alert/focus, parse error, and valid recovery passed"
+    },
+    {
+      "name": "markup injection is inert",
+      "status": "PASS",
+      "detail": "injected img/onerror stayed text and was reported"
+    },
+    {
+      "name": "over-size file recovery",
+      "status": "PASS",
+      "detail": "This file is larger than 2 MB. Choose a smaller caption file."
+    },
+    {
+      "name": "report export",
+      "status": "PASS",
+      "detail": "caption-report.txt contains platform and visible finding"
+    },
+    {
+      "name": "keyboard-only core path and focus",
+      "status": "PASS",
+      "detail": "skip link and check flow operable; focus outline 3px rgb(167, 243, 110)"
+    },
+    {
+      "name": "history navigation focus",
+      "status": "PASS",
+      "detail": "pushState and browser Back restore route and heading focus"
+    },
+    {
+      "name": "axe desktop",
+      "status": "PASS",
+      "detail": "0 total; 0 serious/critical"
+    },
+    {
+      "name": "axe mobile",
+      "status": "PASS",
+      "detail": "0 total; 0 serious/critical"
+    },
+    {
+      "name": "mobile layout and touch targets",
+      "status": "PASS",
+      "detail": "no horizontal overflow; first action/outcome above fold; all exposed targets >=44px"
+    },
+    {
+      "name": "200% equivalent reflow",
+      "status": "PASS",
+      "detail": "320 CSS px reflow retains content and controls without horizontal scroll"
+    },
+    {
+      "name": "reduced motion",
+      "status": "PASS",
+      "detail": "no animation or transition over 1ms"
+    },
+    {
+      "name": "route metadata and link health",
+      "status": "PASS",
+      "detail": "all public routes have expected status/title/landmarks; internal links respond"
+    },
+    {
+      "name": "manifest",
+      "status": "PASS",
+      "detail": "standalone manifest with 2 icon(s)"
+    },
+    {
+      "name": "same-origin privacy request log",
+      "status": "PASS",
+      "detail": "45 requests; all same-origin GETs"
+    },
+    {
+      "name": "console and page errors",
+      "status": "PASS",
+      "detail": "0 unexpected console/page errors; one expected resource message from the deliberate HTTP 404 check"
+    },
+    {
+      "name": "service-worker update and offline reload",
+      "status": "PASS",
+      "detail": "https://caption-style-checker.sociobot.in/sw.js?v=1788028196540; one versioned cache; demo reloaded offline with 11 findings"
+    }
+  ],
+  "evidence": {
+    "axe-desktop": {
+      "totalViolations": 0,
+      "seriousCritical": 0
+    },
+    "axe-mobile": {
+      "totalViolations": 0,
+      "seriousCritical": 0
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/signal-desk.webp",
+        "type": "image"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/signal-desk.webp",
+        "type": "image"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/signal-desk.webp",
+        "type": "image"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/signal-desk.webp",
+        "type": "image"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/demo",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/demo",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/signal-desk.webp",
+        "type": "image"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/demo",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/demo",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/signal-desk.webp",
+        "type": "image"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/demo",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/privacy",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/terms",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/not-a-real-page",
+        "type": "document"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-Cw7xtUUN.js",
+        "type": "script"
+      },
+      {
+        "method": "GET",
+        "url": "https://caption-style-checker.sociobot.in/assets/main-qhPg7aos.css",
+        "type": "stylesheet"
+      }
+    ],
+    "browserErrors": [
+      "console: Failed to load resource: the server responded with a status of 404 ()"
+    ],
+    "summary": {
+      "pass": 25,
+      "fail": 0
+    }
+  }
+}

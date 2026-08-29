@@ -1,0 +1,13 @@
+sample-preflight	0	npm run test:claim -- @claim:sample-preflight
+local-caption-check	0	npm run test:claim -- @claim:local-caption-check
+offline-reload	0	npm run test:claim -- @claim:offline-reload
+free-to-use	0	npm run test:claim -- @claim:free-to-use
+caption-formats	0	npm run test:claim -- @claim:caption-formats
+report-export	0	npm run test:claim -- @claim:report-export
+platform-review-findings	0	npm run test:claim -- @claim:platform-review-findings
+platform-rules-reviewed	0	npm run test:claim -- @claim:platform-rules-reviewed
+caption-check-categories	0	npm run test:claim -- @claim:caption-check-categories
+reading-speed-threshold	0	npm run test:claim -- @claim:reading-speed-threshold
+real-session-refresh	0	npm run test:claim -- @claim:real-session-refresh
+demo-memory-isolation	0	npm run test:claim -- @claim:demo-memory-isolation
+accessible-preview-styles	0	npm run test:claim -- @claim:accessible-preview-styles
