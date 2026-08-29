@@ -23,6 +23,17 @@ describe('caption parser', () => {
       expect(result.cues[0].settings).toBe('');
     }
   });
+  it('F-2-1 reads namespace-prefixed timed TTML elements', () => {
+    const result = parse(`<?xml version="1.0" encoding="UTF-8"?>
+<tt:tt xmlns:tt="http://www.w3.org/ns/ttml"><tt:body><tt:div>
+<tt:p begin="00:00:01.000" end="00:00:03.000">JORDAN: Standard <tt:span>caption</tt:span><tt:br/>line.</tt:p>
+</tt:div></tt:body></tt:tt>`);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result).toMatchObject({ format: 'TTML', cueCount: 1 });
+      expect(result.cues[0].text).toBe('JORDAN: Standard caption line.');
+    }
+  });
   it('F-V3-1 reports a malformed cue beside a valid SRT cue', () => {
     const source = `1
 00:00:01,000 --> 00:00:03,000

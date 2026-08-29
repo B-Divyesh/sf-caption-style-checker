@@ -47,7 +47,8 @@ test('@claim:caption-formats visibly checks WebVTT, SRT, and timed TTML', async 
   const formats = [
     ['WebVTT', 'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nHello world'],
     ['SRT', '1\n00:00:01,000 --> 00:00:03,000\nHello world'],
-    ['TTML', '<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="1s" end="3s">JORDAN: Hello <span>world</span></p></div></body></tt>']
+    ['TTML', '<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="1s" end="3s">JORDAN: Hello <span>world</span></p></div></body></tt>'],
+    ['TTML', fixture('prefixed-timed.ttml')]
   ] as const;
   for (const [format, source] of formats) {
     await page.getByLabel('Caption text').fill(source);

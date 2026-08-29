@@ -1,1 +1,1 @@
-Check timed caption files before upload.
+Check caption files before upload.

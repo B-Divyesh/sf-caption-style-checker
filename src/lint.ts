@@ -78,7 +78,7 @@ function decodeCharacterReferences(value: string) {
 }
 
 function clean(value: string) {
-  return decodeCharacterReferences(value.replace(/<br\s*\/?\s*>/gi, ' ').replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim();
+  return decodeCharacterReferences(value.replace(/<(?:[a-z_][\w.-]*:)?br\s*\/?\s*>/gi, ' ').replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim();
 }
 
 function blocks(source: string) {
@@ -86,7 +86,7 @@ function blocks(source: string) {
 }
 
 function tagNames(value: string) {
-  return [...value.matchAll(/<\/?([a-z][a-z0-9-]*)(?:\s[^>]*)?>/gi)].map(match => match[1].toLowerCase());
+  return [...value.matchAll(/<\/?([a-z_][\w.-]*(?::[a-z_][\w.-]*)?)(?:\s[^>]*)?>/gi)].map(match => localName(match[1]).toLowerCase());
 }
 
 function attributes(value: string) {
@@ -109,7 +109,7 @@ type TtmlStyle = { references: string[]; properties: string[] };
 
 function ttmlStyles(source: string) {
   const styles = new Map<string, TtmlStyle>();
-  for (const match of source.matchAll(/<style\b([^>]*)\/?\s*>/gi)) {
+  for (const match of source.matchAll(/<(?:[a-z_][\w.-]*:)?style\b([^>]*)\/?\s*>/gi)) {
     const attrs = attributes(match[1]);
     const id = attrs.get('xml:id') || attrs.get('id');
     if (!id) continue;
@@ -143,7 +143,7 @@ function ttmlSemantics(raw: string, styles: Map<string, TtmlStyle>) {
     style.references.forEach(resolve);
   };
 
-  for (const element of raw.matchAll(/<(?:p|span|br)\b([^>]*)>/gi)) {
+  for (const element of raw.matchAll(/<(?:[a-z_][\w.-]*:)?(?:p|span|br)\b([^>]*)>/gi)) {
     const attrs = attributes(element[1]);
     attrs.forEach((_value, name) => addProperty(name));
     (attrs.get('style') || '').trim().split(/\s+/).filter(Boolean).forEach(resolve);
@@ -163,7 +163,7 @@ function malformed(cue: number, line?: string): Finding {
 
 export function detectFormat(source: string): Format | null {
   if (/^\s*WEBVTT(?:\s|$)/i.test(source)) return 'WebVTT';
-  if (/<(?:tt|ttml)(?:\s|>)/i.test(source)) return 'TTML';
+  if (/<(?:[a-z_][\w.-]*:)?(?:tt|ttml)(?:\s|>)/i.test(source)) return 'TTML';
   if (/^\s*(?:\d+\s*\n)?[^\n]*-->[^\n]*$/m.test(source)) return 'SRT';
   return null;
 }
@@ -177,7 +177,7 @@ export function parse(source: string): ParseResult {
     const findings: Finding[] = [];
     const styles = ttmlStyles(source);
     let cueCount = 0;
-    for (const match of source.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)) {
+    for (const match of source.matchAll(/<(?:[a-z_][\w.-]*:)?p\b([^>]*)>([\s\S]*?)<\/(?:[a-z_][\w.-]*:)?p\s*>/gi)) {
       cueCount += 1;
       const attrs = match[1];
       const begin = /\bbegin=["']([^"']+)/i.exec(attrs)?.[1];
