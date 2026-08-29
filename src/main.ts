@@ -86,7 +86,7 @@ function render(focusHeading = false) {
 }
 function renderAndFocus(selector: string) {
   render();
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
+  document.querySelector<HTMLElement>(selector)?.focus();
 }
 function bind() {
   document.querySelectorAll<HTMLAnchorElement>('[data-link]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); nav(a.getAttribute('href') || '/'); }));
