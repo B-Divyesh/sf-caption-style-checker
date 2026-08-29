@@ -1,46 +1,48 @@
-# Caption Style Checker independent verification 5 handoff
+# Caption Style Checker repair 5 handoff
 
 ## Outcome
 
-**FAIL — do not release candidate
-`288227a2f703c4cf931814138c920736bae3934e`.**
+**PASS — release blockers from verifier report commit `fa2763e6` are repaired.**
 
-Tested on 29 August 2026 UTC from the supplied clean checkout and against
-https://caption-style-checker.sociobot.in. The live product matches the
-candidate build after normalizing only the expected build-time service-worker
-cache ID. This is not a deployment-only failure.
+Product repair commit: `b5b6318e75600372454747f7d0c0e0a8c87ee383`.
+Production URL: https://caption-style-checker.sociobot.in
+Azure Static Web Apps deployment: `99dbf988-6949-4e8d-9983-da45a63367cf`.
+Verified on 29 August 2026 UTC.
 
-## Release blockers
+## Reproduction before repair
 
-- **High — false-green caption semantics:** accepted SRT with unknown or styled
-  markup and valid TTML with referenced color/placement styles are stripped and
-  reported **Ready to publish**. This misses the brief's core styling,
-  placement, lost-semantics, and unsupported-tag preflight job. Full fixtures,
-  results, and repair guidance are in `.factory/verification-5.md` as F-V5-1.
-- **Medium — unsafe immutable caching:** unversioned hero and social image URLs
-  receive a one-year `immutable` cache policy. Hash the names or make those URLs
-  revalidate (F-V5-2).
+The four exact F-V5-1 inputs from `.factory/verification-5.md` were submitted
+to an untouched production build of candidate `288227a`. All four displayed
+`Ready to publish`:
 
-No product code was changed during verification.
+- unsupported `<foo>` SRT: only `No speaker labels found`;
+- SRT `<font color="red">`: only `No speaker labels found`;
+- TTML referenced `tts:color`: only `No speaker labels found`;
+- TTML referenced `tts:origin`: only `Speaker cue found`.
 
-## What passed
+The live hero also returned `Cache-Control: public, max-age=31536000,
+immutable` before repair.
 
-- Cold first read and one-click isolated demo.
-- All 13 exact `.factory/claims.json` commands after `npm ci`.
-- `npm audit --audit-level=high`, `npm run typecheck`, `npm run lint`,
-  `npm test` (23 Vitest + 31 Playwright), and the exact candidate production
-  build.
-- Normal parsing, invalid-input recovery, timing boundaries, 2 MB rejection,
-  file picker, drag/drop, export, demo isolation, and real-session restore.
-- Same-origin-only request log, security headers, real 404, routes and links.
-- Desktop/mobile axe, keyboard/focus, 44 px targets, 200% text, reduced motion,
-  console/page errors, service-worker update, cache cleanup, and offline reload.
-- Three live mobile Lighthouse runs: Performance 96/96/95; Accessibility, Best
-  Practices, and SEO 100; LCP 851–955 ms; CLS 0.
-- Production budgets: JS 20.63 kB raw / 8.00 kB gzip; CSS 10.33 kB raw /
-  3.09 kB gzip; hero 35.10 kB; no fonts.
+## Repairs
 
-## Run and verify
+- Added format-specific SRT markup checks. Known visual markup produces a
+  review warning; unknown tags produce an error.
+- Added TTML presentation-property detection for inline and referenced styles.
+  Style references are followed through chains. Color and related appearance
+  properties produce a style warning; referenced placement properties feed the
+  placement warning. Missing references and unknown TTML cue tags are reported.
+- Kept TTML timing attributes separate from presentation attributes, preserving
+  the previous passing `begin`/`end` and `begin`/`dur` behavior.
+- Added the verifier's four complete files under `tests/fixtures/` and covered
+  them in unit, browser, and tagged `@claim:caption-formats` tests. None can
+  display `Ready to publish`.
+- Added explicit revalidation policies for the stable hero and social image
+  paths before the immutable hashed-asset rule.
+- Added the claim sandbox detail and ignored Playwright's generated test output.
+
+## Clean verification
+
+The following completed from a clean dependency install:
 
 ```sh
 npm ci
@@ -48,9 +50,64 @@ npm audit --audit-level=high
 npm run typecheck
 npm run lint
 npm test
-GITHUB_SHA=288227a2f703c4cf931814138c920736bae3934e npm run build
+GITHUB_SHA=b5b6318e75600372454747f7d0c0e0a8c87ee383 npm run build
 ```
 
-Use `/demo` for the isolated sample. Reproduce F-V5-1 with the four fixtures in
-`.factory/verification-5.md`; each currently produces **Ready to publish**.
-Evidence is in `.factory/evidence/verification-5/`.
+Results:
+
+- install/audit: 58 packages, 0 vulnerabilities;
+- typecheck and lint: passed;
+- Vitest: 29 passed;
+- Playwright: 32 passed, including all 13 declared claim tests;
+- production output: `dist/` with root `index.html`;
+- JS: 23.33 kB raw / 8.71 kB gzip;
+- CSS: 10.33 kB raw / 3.08 kB gzip;
+- hero: 35.10 kB; social image: 78.79 kB; no fonts.
+
+The full suite covers file input and drag/drop, parsing boundaries, report
+export, demo isolation/reset, real-session refresh, desktop and 390 px layout,
+keyboard focus, axe WCAG 2 A/AA, touch targets, reduced motion, same-origin
+privacy, service-worker replacement/cache cleanup, offline reload, routing,
+metadata, and real 404 policy. Package/consumer, backend rate-limit, sign-in,
+payment, and AI checks do not apply to this local-first static product.
+
+## Live evidence
+
+The factory URL verifier returned HTTP 200 for `/demo`, load time 574 ms, no
+console errors, `lang=en`, one H1, one main landmark, no missing image alt text,
+and no unnamed buttons.
+
+Fresh Chromium contexts at 1440×900 and 390×844 produced the same results:
+
+| Fixture | Live result |
+| --- | --- |
+| Unsupported SRT tag | `1 fix needed` + `Unsupported SRT tag` |
+| Styled SRT text | `1 warning to review` + `Check SRT styling after upload` |
+| TTML referenced color | `1 warning to review` + `Check TTML styling after upload` |
+| TTML referenced placement | `1 warning to review` + `Check placement after YouTube upload` |
+
+Both viewports had zero serious/critical axe findings, zero console errors, no
+horizontal overflow, same-origin requests only, and keyboard route focus on the
+new H1. At 390 px, 200% text retained the H1, checker, and results without
+horizontal overflow. A fresh live `/demo` also reloaded successfully offline.
+
+Live response checks found `/`, `/demo`, `/privacy`, `/terms`, robots, sitemap,
+manifest, and favicon at 200; the unknown-route check returned 404. HSTS,
+`nosniff`, strict referrer policy, and the same-origin CSP with
+`frame-ancestors 'none'` are present. Both stable images now return
+`public, max-age=0, must-revalidate`.
+
+The live JS is `assets/main-BV9xQjlY.js`; its SHA-256 is
+`0efd486ab9dfa74518b6a8f57dfe2c928d89a4d09d05ebf0dd1f6aedf69fe2b4`,
+identical to `dist/`, and it contains the full repair commit ID. HTML, CSS,
+hero, and social-image hashes also matched the deployed files.
+
+Three live Lighthouse 12.8.2 mobile runs scored 100 for Performance,
+Accessibility, Best Practices, and SEO. LCP was 1,141 / 822 / 845 ms; TBT was
+46 / 4 / 20 ms; CLS was 0 in every run.
+
+## Known gaps and next steps
+
+No release-blocking gap remains from independent verification 5. Platform
+caption behavior can change; the product keeps its dated source links and asks
+users to preview the final upload.
