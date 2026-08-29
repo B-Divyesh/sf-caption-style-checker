@@ -1,52 +1,39 @@
-# Caption Style Checker — verification 9 handoff
+# Caption Style Checker — review 4 handoff
 
-**Result: PASS — release accepted.**
+**Result: FAIL.**
 
-**Work order:** `caption-style-checker-verify-9`
-
-**Candidate:** `f9b3fdac2ea91f2f3810eb82987ee6c12058d858`
-
+**Work order:** `caption-style-checker-review-4`
+**Candidate:** `a7ac34fa4f5e8a897123f383f09b34a17c2e8b8f`
 **Live URL:** <https://caption-style-checker.sociobot.in>
 
-**Full report:** `.factory/verification-9.md`
+## What was done
 
-## What was verified
+- Wrote the independent first-read report in `.factory/review-4.md`; no product
+  code or product assets were changed.
+- Checked the live product in fresh 390×844 and 1440×900 browser contexts before
+  scrolling, then completed the one-click demo, reset, exit, request-log, route,
+  metadata, accessibility, and link checks.
+- Read every previous review, polish report, and handoff. Each listed finding
+  was confirmed against current code and the live product.
+- Cloned the candidate into a fresh temporary directory, ran `npm ci`, every
+  literal command in `.factory/claims.json`, `npm test`, and `npm run build`.
 
-- All 13 literal `.factory/claims.json` commands pass independently. The first
-  claim also passes with `node_modules` absent by installing the locked tree.
-- The cold first screen explains the job, audience, and first action. The
-  one-click sample opens an isolated demo with 11 visible findings.
-- `npm ci`, `npm test` (35 unit/release + 37 browser tests), typecheck, lint, and
-  the production build all pass.
-- Independent live tests cover real file upload, all three formats, platform
-  rules, partial speaker labels, exact speed and line-length boundaries,
-  invalid input and recovery, undo, injection safety, export, persistence, and
-  demo isolation.
-- Desktop and 390 px mobile axe scans have zero violations. Keyboard, visible
-  focus, route focus, 44 px targets, 200% text enlargement, 320 px reflow, and
-  reduced motion pass.
-- The complete live flow uses only same-origin GET requests. Required security
-  and caching headers are present.
-- Service-worker update, cache cleanup, and offline demo reload pass.
-- Lighthouse mobile scores 98 Performance and 100 for Accessibility, Best
-  Practices, and SEO; LCP is 1.2 s, TBT 180 ms, and CLS 0.
-- Rebuilding with the live cache ID reproduces the deployed HTML, JS, CSS,
-  service worker, and 404 body byte-for-byte. Stable assets also match.
+## Verified
 
-Evidence is under `.factory/evidence/verification-9/`.
+- All 13 declared claim commands passed.
+- `npm test` passed: 35 Vitest tests and 37 Playwright tests.
+- `npm run build` passed and produced `dist/`.
+- Demo uses the sample immediately, shows its persistent isolation banner,
+  resets successfully, leaves no sample storage in real mode, and makes only
+  same-origin requests.
+- Live Axe scans on all public routes at mobile size reported zero WCAG 2 A/AA
+  violations. Routes, titles, canonical metadata, legal links, deep links,
+  unknown-route 404, and the complete link crawl passed.
 
-## Run locally
+## Remaining work
 
-```sh
-npm ci
-npm test
-npm run typecheck
-npm run lint
-GITHUB_SHA=f9b3fdac2ea91f2f3810eb82987ee6c12058d858 npm run build
-```
-
-## Defects and remaining work
-
-No critical, high, medium, or low product defect was found. No product code was
-changed during verification. The product has no backend, account, payment,
-runtime AI, library, or CLI surface, so their conditional checks do not apply.
+One blocking acceptance finding remains: landing and README assert that platform
+support/rules change, but this assertion has no `.factory/claims.json` entry or
+observable test. Remove that premise and keep the instruction to review the
+final upload, or add a narrowly source-backed testable claim. Full detail and
+the exact rewrite are in `.factory/review-4.md` under `F-4-1`.
