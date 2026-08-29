@@ -78,8 +78,30 @@ The repair is configured for Azure Static Web Apps at
 /opt/fleet/lib/deploy-static.sh caption-style-checker dist
 ```
 
-Live deployment identity and post-deploy results are recorded below after the
-production upload.
+Implementation commit `b933bc4757ba5bca664114dcc8ebec7feb94a168` was pushed to
+`origin/main` and deployed successfully on 2026-08-29 UTC. Azure deployment ID:
+`9d7332db-a290-45f7-8982-b947f505c1cd`.
+
+Post-deploy evidence:
+
+- `verify-url.sh` against the live `/demo` returned 200 in 568 ms with the
+  correct title and language, one H1, one main landmark, complete image alt
+  text, named buttons, and 0 console/page errors.
+- Fresh live desktop and 390×844 sessions each had 0 Axe WCAG 2 A/AA
+  violations, 0 console errors, one H1, and no horizontal overflow.
+- The live timing-only TTML fixture rendered as TTML with no placement warning;
+  a custom demo SRT remained editable after checking.
+- A fresh live service worker cached `/demo`, which then reloaded offline with
+  the sample heading intact. The exercised demo flow made only same-origin
+  requests.
+- Live status checks returned 200 for `/`, `/demo`, `/privacy`, `/terms`,
+  robots, sitemap, manifest, and favicon; `/not-a-real-page` returned 404. All
+  internal links and the Param Factory footer link resolved successfully.
+- Live CSP, HSTS, `nosniff`, strict referrer policy, `frame-ancestors 'none'`,
+  same-origin `connect-src`, and immutable hashed-asset caching are present.
+- SHA-256 hashes match the deployed build byte for byte: HTML
+  `479d4be5…a7fb`, JavaScript `1edc1031…8ca`, CSS `48ba4637…f630`, service
+  worker `df4c2e7a…750bb`, and hero WebP `878f72db…b45cd`.
 
 ## Known limits
 
