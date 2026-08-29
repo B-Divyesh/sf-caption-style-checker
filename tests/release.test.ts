@@ -77,4 +77,14 @@ describe('release contracts', () => {
     ]) expect(audit, copy).toContain(copy);
     expect(audit).not.toContain('Files stay in this browser.');
   });
+
+  it('F-4-1 keeps final-upload guidance without an untestable platform-change assertion', () => {
+    const copy = [
+      readFileSync('src/main.ts', 'utf8'),
+      readFileSync('README.md', 'utf8'),
+      readFileSync('.factory/copy-audit.md', 'utf8')
+    ].join('\n');
+    expect(copy).toContain('Review the final upload before publishing.');
+    expect(copy).not.toMatch(/Platform (?:support|rules) change/i);
+  });
 });

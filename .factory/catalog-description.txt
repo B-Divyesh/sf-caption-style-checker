@@ -1,1 +1,1 @@
-Check WebVTT, SRT, and timed TTML files before upload.
+Check WebVTT, SRT, and timed TTML captions before publishing.

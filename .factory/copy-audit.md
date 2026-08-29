@@ -1,6 +1,6 @@
 # Copy audit
 
-Audited against the verifier-eight repair landing and demo on 29 August 2026. The first
+Audited against the polish-four repair landing and demo on 29 August 2026. The first
 screen reads aloud in one breath: “Check captions before upload for video
 educators; try the sample to load a file and see its warnings.”
 
@@ -30,7 +30,7 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | YouTube upload | 2 | pass |
 | HTML video track | 3 | pass |
 | Rules reviewed 29 August 2026. | 5 | pass |
-| Platform support changes. | 3 | pass |
+| Review the final upload before publishing. | 6 | pass |
 | Check YouTube upload format guidance (external site). | 7 | pass |
 | Choose a caption file | 4 | pass |
 | or drop it here · WebVTT, SRT, timed TTML | 8 | pass |
@@ -52,7 +52,7 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | Review fast cues, long lines, markup, placement, and speakers. | 9 | pass |
 | What this checker does not do | 6 | pass |
 | It checks timed caption files in this browser. | 8 | pass |
-| Platform rules change, so review the final upload before publishing. | 10 | pass |
+| Review the final upload before publishing. | 6 | pass |
 | Caption checks for people publishing video lessons. | 7 | pass |
 | Terms | 1 | pass |
 | Built by Param Factory (external site) | 6 | pass |
@@ -125,7 +125,7 @@ publishing platform renders, removes, or preserves caption features.
 | Caption text stays in this browser. | 6 | pass |
 | Real mode saves the current caption text in this browser for refresh. | 11 | pass |
 | Demo mode keeps its sample text only in memory. | 9 | pass |
-| Platform support changes, so review the final upload before publishing. | 10 | pass |
+| Review the final upload before publishing. | 6 | pass |
 
 ## Terminology
 

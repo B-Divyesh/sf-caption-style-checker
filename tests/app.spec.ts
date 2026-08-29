@@ -119,10 +119,18 @@ test('@claim:platform-rules-reviewed shows the dated source for each selected pl
   await page.goto('/demo');
   const note = page.locator('.profile-note');
   await expect(note).toContainText('Rules reviewed 29 August 2026');
+  await expect(note).toContainText('Review the final upload before publishing.');
+  await expect(note).not.toContainText(/Platform (?:support|rules) change/i);
   await expect(note.getByRole('link')).toHaveAttribute('href', /support\.google\.com\/youtube/);
   await page.getByLabel('Publishing platform').selectOption('html');
   await expect(note).toContainText('Rules reviewed 29 August 2026');
   await expect(note.getByRole('link')).toHaveAttribute('href', /developer\.mozilla\.org/);
+});
+
+test('F-4-1 keeps only practical final-upload guidance on the landing page', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Review the final upload before publishing.')).toHaveCount(2);
+  await expect(page.locator('body')).not.toContainText(/Platform (?:support|rules) change/i);
 });
 
 test('@claim:caption-check-categories shows every advertised check category', async ({ page }) => {
