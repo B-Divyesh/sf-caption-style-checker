@@ -34,4 +34,19 @@ describe('release contracts', () => {
     expect(worker).toContain('key !== CACHE');
     expect(worker.indexOf("if (e.request.mode === 'navigate')")).toBeLessThan(worker.indexOf('caches.match(e.request'));
   });
+
+  it('F-V3-7 keeps the copy audit aligned with every previously omitted landing state', () => {
+    const audit = readFileSync('.factory/copy-audit.md', 'utf8');
+    for (const copy of [
+      'Caption text stays in this browser.',
+      'No caption file loaded',
+      'Your checks will appear here.',
+      'You can also paste caption text below.',
+      'What this checker does not do',
+      'Caption checks for people publishing video lessons.',
+      'Compare accessible styles',
+      'Cue has an invalid timestamp'
+    ]) expect(audit, copy).toContain(copy);
+    expect(audit).not.toContain('Files stay in this browser.');
+  });
 });

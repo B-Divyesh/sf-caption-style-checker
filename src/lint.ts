@@ -1,7 +1,10 @@
 export type Format = 'WebVTT' | 'SRT' | 'TTML';
-export type Cue = { start: number; end: number; text: string; settings?: string; raw: string; id?: string };
+export type Cue = { start: number; end: number; text: string; settings?: string; raw: string; id?: string; number: number };
 export type Finding = { level: 'error' | 'warning' | 'note'; code: string; title: string; detail: string; cue?: number };
-export type Report = { format: Format; cues: Cue[]; findings: Finding[]; duration: number; profile: string };
+export type Report = { format: Format; cues: Cue[]; cueCount: number; findings: Finding[]; duration: number; profile: string };
+
+type ParseResult = { format: Format; cues: Cue[]; cueCount: number; findings: Finding[] } | { error: string };
+type Profile = { label: string; source: string; reviewed: string; formats: Format[]; settings: boolean; tags: RegExp | null };
 
 export const SAMPLE_VTT = `WEBVTT
 
@@ -17,71 +20,152 @@ This sentence is deliberately far too dense for its short display time, so a vie
 00:00:04.200 --> 00:00:06.000 align:start
 <b>Important:</b> check the caption cues.`;
 
-function time(value: string): number {
-  const p = value.trim().replace(',', '.').split(':').map(Number);
-  if (p.some(Number.isNaN) || p.length < 2 || p.length > 3) return NaN;
-  return (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1]);
+export const PROFILES: Record<string, Profile> = {
+  youtube: {
+    label: 'YouTube upload',
+    source: 'https://support.google.com/youtube/answer/2734698?hl=en',
+    reviewed: '29 August 2026',
+    formats: ['WebVTT', 'SRT', 'TTML'],
+    settings: true,
+    tags: /<(?:v|i|b|u|c(?:\.[^ >]+)?|ruby|rt|lang)[^>]*>/gi
+  },
+  html: {
+    label: 'HTML video track',
+    source: 'https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API/Web_Video_Text_Tracks_Format',
+    reviewed: '29 August 2026',
+    formats: ['WebVTT'],
+    settings: false,
+    tags: null
+  }
+};
+
+function clockTime(value: string): number {
+  const match = /^(?:(\d+):)?(\d{2}):(\d{2})(?:[,.](\d+))?$/.exec(value.trim());
+  if (!match) return NaN;
+  const hours = match[1] === undefined ? 0 : Number(match[1]);
+  const minutes = Number(match[2]);
+  const seconds = Number(match[3]);
+  const fraction = match[4] ? Number(`0.${match[4]}`) : 0;
+  if (minutes > 59 || seconds > 59) return NaN;
+  return hours * 3600 + minutes * 60 + seconds + fraction;
 }
-function clean(s: string) { return s.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(); }
-function blocks(source: string) { return source.replace(/\r/g, '').trim().split(/\n\s*\n/).filter(Boolean); }
+
+function ttmlTime(value: string): number {
+  const offset = /^(\d+(?:\.\d+)?)(h|m|s|ms)$/.exec(value.trim());
+  if (offset) return Number(offset[1]) * ({ h: 3600, m: 60, s: 1, ms: 0.001 }[offset[2]] || 0);
+  return clockTime(value);
+}
+
+function clean(value: string) {
+  return value.replace(/<br\s*\/?\s*>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function blocks(source: string) {
+  return source.replace(/\r/g, '').trim().split(/\n\s*\n/).filter(Boolean);
+}
+
+function malformed(cue: number, line?: string): Finding {
+  return {
+    level: 'error',
+    code: 'malformed-time',
+    title: 'Cue has an invalid timestamp',
+    detail: line ? `Fix this timing line: ${line}. Use minutes and seconds from 00 to 59.` : 'Add one timing line with a start, an arrow, and an end time.',
+    cue
+  };
+}
 
 export function detectFormat(source: string): Format | null {
-  if (/^\s*WEBVTT/i.test(source)) return 'WebVTT';
+  if (/^\s*WEBVTT(?:\s|$)/i.test(source)) return 'WebVTT';
   if (/<(?:tt|ttml)(?:\s|>)/i.test(source)) return 'TTML';
-  if (/\d{1,2}:\d{2}:\d{2}[,.]\d{3}\s+-->\s+\d{1,2}:\d{2}:\d{2}[,.]\d{3}/.test(source)) return 'SRT';
+  if (/^\s*(?:\d+\s*\n)?[^\n]*-->[^\n]*$/m.test(source)) return 'SRT';
   return null;
 }
-export function parse(source: string): { format: Format; cues: Cue[] } | { error: string } {
+
+export function parse(source: string): ParseResult {
   const format = detectFormat(source);
   if (!format) return { error: 'This does not look like a WebVTT, SRT, or timed TTML file. Choose a caption file with timed cues.' };
+
   if (format === 'TTML') {
     const cues: Cue[] = [];
-    for (const m of source.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)) {
-      const attrs = m[1], begin = /\bbegin=["']([^"']+)/i.exec(attrs)?.[1], end = /\bend=["']([^"']+)/i.exec(attrs)?.[1];
-      const start = begin ? time(begin) : NaN, finish = end ? time(end) : NaN;
+    const findings: Finding[] = [];
+    let cueCount = 0;
+    for (const match of source.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)) {
+      cueCount += 1;
+      const attrs = match[1];
+      const begin = /\bbegin=["']([^"']+)/i.exec(attrs)?.[1];
+      const end = /\bend=["']([^"']+)/i.exec(attrs)?.[1];
+      const start = begin ? ttmlTime(begin) : NaN;
+      const finish = end ? ttmlTime(end) : NaN;
+      if (Number.isNaN(start) || Number.isNaN(finish)) {
+        findings.push(malformed(cueCount, `begin="${begin || ''}" end="${end || ''}"`));
+        continue;
+      }
       const placement = attrs.match(/(?:^|\s)(?:region|tts:(?:textAlign|displayAlign|origin|extent|writingMode))\s*=\s*["'][^"']*["']/gi) || [];
-      if (!Number.isNaN(start) && !Number.isNaN(finish)) cues.push({ start, end: finish, text: clean(m[2]), raw: m[0], settings: placement.join(' ') });
+      cues.push({ start, end: finish, text: clean(match[2]), raw: match[0], settings: placement.join(' '), number: cueCount });
     }
-    return cues.length ? { format, cues } : { error: 'No timed <p> captions were found in this TTML file. Use begin and end attributes on each caption.' };
+    if (!cueCount) return { error: 'No timed <p> captions were found in this TTML file. Use begin and end attributes on each caption.' };
+    return { format, cues, cueCount, findings };
   }
+
   const cues: Cue[] = [];
+  const findings: Finding[] = [];
+  let cueCount = 0;
   for (const block of blocks(source)) {
-    if (format === 'WebVTT' && /^WEBVTT/i.test(block)) continue;
+    if (format === 'WebVTT' && (/^WEBVTT(?:\s|$)/i.test(block) || /^(?:NOTE|STYLE|REGION)(?:\s|$)/i.test(block))) continue;
+    cueCount += 1;
     const lines = block.split('\n');
-    const arrow = lines.findIndex(x => x.includes('-->'));
-    if (arrow < 0) continue;
-    const match = /^\s*([^\s]+)\s+-->\s+([^\s]+)(?:\s+(.*))?$/.exec(lines[arrow]);
-    if (!match) continue;
-    const start = time(match[1]), end = time(match[2]);
-    if (Number.isNaN(start) || Number.isNaN(end)) continue;
+    const arrow = lines.findIndex(line => line.includes('-->'));
+    if (arrow < 0) {
+      findings.push(malformed(cueCount));
+      continue;
+    }
+    const timingLine = lines[arrow].trim();
+    const match = /^([^\s]+)\s+-->\s+([^\s]+)(?:\s+(.*))?$/.exec(timingLine);
+    if (!match) {
+      findings.push(malformed(cueCount, timingLine));
+      continue;
+    }
+    const start = clockTime(match[1]);
+    const end = clockTime(match[2]);
+    const requiredShape = format === 'SRT' ? /^\d+:\d{2}:\d{2}[,.]\d{3}$/ : /^(?:\d+:)?\d{2}:\d{2}[,.]\d{3}$/;
+    if (!requiredShape.test(match[1]) || !requiredShape.test(match[2]) || Number.isNaN(start) || Number.isNaN(end)) {
+      findings.push(malformed(cueCount, timingLine));
+      continue;
+    }
     const raw = lines.slice(arrow + 1).join('\n').trim();
-    cues.push({ start, end, text: clean(raw), raw, settings: match[3] || '', id: arrow ? lines[0].trim() : undefined });
+    cues.push({ start, end, text: clean(raw), raw, settings: match[3] || '', id: arrow ? lines[0].trim() : undefined, number: cueCount });
   }
-  return cues.length ? { format, cues } : { error: 'No readable timed cues were found. Check each time line uses an arrow, for example 00:00:01.000 --> 00:00:03.000.' };
+  if (!cueCount) return { error: 'No caption cues were found. Add a timing line, for example 00:00:01.000 --> 00:00:03.000.' };
+  return { format, cues, cueCount, findings };
 }
 
-const profiles: Record<string, { label: string; tags: RegExp; settings: boolean }> = {
-  youtube: { label: 'Placement and markup review', tags: /<(?:v|i|b|u|c(?:\.[^ >]+)?|ruby|rt|lang)[^>]*>/gi, settings: true },
-  html5: { label: 'WebVTT player review', tags: /<(?:ruby|rt|lang)[^>]*>/gi, settings: false },
-  plain: { label: 'Plain-text export review', tags: /<[^>]+>/g, settings: true }
-};
 export function lint(source: string, profile = 'youtube'): Report | { error: string } {
   const parsed = parse(source);
   if ('error' in parsed) return parsed;
-  const p = profiles[profile] || profiles.youtube, findings: Finding[] = [];
-  parsed.cues.forEach((cue, index) => {
-    const n = index + 1, seconds = cue.end - cue.start, words = cue.text ? cue.text.split(/\s+/).length : 0, wpm = seconds > 0 ? words / seconds * 60 : Infinity;
-    if (cue.end <= cue.start) findings.push({ level: 'error', code: 'bad-time', title: 'End time is not after start time', detail: 'Set a later end time for this cue.', cue: n });
-    if (!cue.text) findings.push({ level: 'error', code: 'empty', title: 'Cue has no caption text', detail: 'Add text or remove this empty timed cue.', cue: n });
-    if (wpm > 180) findings.push({ level: 'warning', code: 'speed', title: `${Math.round(wpm)} words per minute`, detail: 'This cue is above the 180-word-per-minute guidance threshold.', cue: n });
-    if (cue.text.length > 84 || cue.raw.split('\n').some(l => clean(l).length > 42)) findings.push({ level: 'warning', code: 'line-length', title: 'Long caption line', detail: 'Split this cue into shorter lines for easier reading.', cue: n });
-    if (p.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Review placement settings', detail: 'This profile highlights placement or alignment settings to review in your final upload.', cue: n });
-    const tags = cue.raw.match(p.tags) || [];
-    if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Review caption markup', detail: `This profile highlights ${[...new Set(tags.map(x => x.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup to review in your final upload.`, cue: n });
-    if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: n });
-    if (/<v(?:\s|>)/i.test(cue.raw)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Check that speaker names remain visible after export.', cue: n });
+  const selected = PROFILES[profile] || PROFILES.youtube;
+  const findings: Finding[] = [...parsed.findings];
+
+  if (!selected.formats.includes(parsed.format)) {
+    findings.push({ level: 'error', code: 'platform-format', title: `${selected.label} needs WebVTT`, detail: `Convert this ${parsed.format} file to WebVTT before using it in an HTML <track> element.` });
+  }
+
+  parsed.cues.forEach(cue => {
+    const seconds = cue.end - cue.start;
+    const words = cue.text ? cue.text.split(/\s+/).length : 0;
+    if (seconds <= 0) findings.push({ level: 'error', code: 'bad-time', title: 'End time is not after start time', detail: 'Set a later end time for this cue.', cue: cue.number });
+    if (!cue.text) findings.push({ level: 'error', code: 'empty', title: 'Cue has no caption text', detail: 'Add text or remove this empty timed cue.', cue: cue.number });
+    if (seconds > 0) {
+      const wpm = words / seconds * 60;
+      if (wpm > 180) findings.push({ level: 'warning', code: 'speed', title: `${Math.round(wpm)} words per minute`, detail: 'This cue is above the 180-word-per-minute guidance threshold.', cue: cue.number });
+    }
+    if (cue.text.length > 84 || cue.raw.split('\n').some(line => clean(line).length > 42)) findings.push({ level: 'warning', code: 'line-length', title: 'Long caption line', detail: 'Split this cue into shorter lines for easier reading.', cue: cue.number });
+    if (selected.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Check placement after YouTube upload', detail: 'This cue uses placement or alignment settings. Preview the uploaded video because YouTube rendering can differ.', cue: cue.number });
+    const tags = selected.tags ? cue.raw.match(selected.tags) || [] : [];
+    if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Check markup after YouTube upload', detail: `This cue uses ${[...new Set(tags.map(tag => tag.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
+    if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: cue.number });
+    if (/<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Check that speaker names remain visible after export.', cue: cue.number });
   });
-  if (!parsed.cues.some(c => /<v(?:\s|>)|^[A-Z][A-Za-z .'-]{1,25}:/m.test(c.raw))) findings.push({ level: 'note', code: 'speaker-missing', title: 'No speaker labels found', detail: 'Add names when more than one voice speaks or identity matters.' });
-  const duration = Math.max(...parsed.cues.map(c => c.end));
-  return { format: parsed.format, cues: parsed.cues, findings, duration, profile: p.label };
+  if (parsed.cues.length && !parsed.cues.some(cue => /<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text))) findings.push({ level: 'note', code: 'speaker-missing', title: 'No speaker labels found', detail: 'Add names when more than one voice speaks or identity matters.' });
+  const duration = parsed.cues.length ? Math.max(...parsed.cues.map(cue => cue.end)) : 0;
+  return { format: parsed.format, cues: parsed.cues, cueCount: parsed.cueCount, findings, duration, profile: selected.label };
 }

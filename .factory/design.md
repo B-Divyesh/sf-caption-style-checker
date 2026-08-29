@@ -39,6 +39,13 @@ through a polite live region. The signature motion is one short horizontal
 "signal sweep" on a newly rendered report (180ms); with reduced motion it is
 immediate and static.
 
+The cue monitor offers three deliberate accessibility proofs: white on black,
+black on white, and phosphor yellow on black. Each pairing exceeds 4.5:1, uses
+the same square caption plate, and can be selected with native radio controls.
+This turns the signal-desk preview into a comparison tool without imitating a
+video editor. Platform choices use native selects and keep keyboard focus after
+the report is redrawn.
+
 ## Art plan and provenance
 
 Hero art is an original generated raster: an empty CRT monitor showing colored

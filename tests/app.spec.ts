@@ -6,7 +6,7 @@ test('@claim:sample-preflight loads the isolated sample and visible warnings', a
   await expect(page.getByRole('status')).toContainText('nothing is saved');
   await expect(page.getByRole('heading', { name: 'Check sample captions' })).toBeVisible();
   await expect(page.locator('.finding')).toHaveCount(9);
-  await expect(page.getByText('Review placement settings').first()).toBeVisible();
+  await expect(page.getByText('Check placement after YouTube upload').first()).toBeVisible();
 });
 
 test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
@@ -38,7 +38,7 @@ test('@claim:caption-formats visibly checks WebVTT, SRT, and timed TTML', async 
   const formats = [
     ['WebVTT', 'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nHello world'],
     ['SRT', '1\n00:00:01,000 --> 00:00:03,000\nHello world'],
-    ['TTML', '<tt><body><div><p begin="00:00:01.000" end="00:00:03.000">Hello <span>world</span></p></div></body></tt>']
+    ['TTML', '<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="1s" end="3s">JORDAN: Hello <span>world</span></p></div></body></tt>']
   ] as const;
   for (const [format, source] of formats) {
     await page.getByLabel('Caption text').fill(source);
@@ -46,6 +46,7 @@ test('@claim:caption-formats visibly checks WebVTT, SRT, and timed TTML', async 
     await expect(page.locator('.report .eyebrow')).toContainText(format);
   }
   await expect(page.getByText('Review placement settings')).toHaveCount(0);
+  await expect(page.getByText('Speaker cue found')).toBeVisible();
 });
 
 test('@claim:report-export downloads the visible findings as text', async ({ page }) => {
@@ -57,23 +58,79 @@ test('@claim:report-export downloads the visible findings as text', async ({ pag
   const stream = await download.createReadStream();
   let text = '';
   for await (const chunk of stream) text += chunk.toString();
-  expect(text).toContain('Profile: Placement and markup review');
-  expect(text).toContain('WARNING cue 1: Review placement settings');
+  expect(text).toContain('Publishing platform: YouTube upload');
+  expect(text).toContain('WARNING cue 1: Check placement after YouTube upload');
 });
 
-test('@claim:profile-review-findings highlights placement settings and markup for review', async ({ page }) => {
+test('@claim:platform-review-findings applies the selected publishing platform rules', async ({ page }) => {
   await page.goto('/demo');
-  await expect(page.getByText('Profile: Placement and markup review')).toBeVisible();
-  await expect(page.getByText('Review placement settings').first()).toBeVisible();
-  await expect(page.getByText('Review caption markup').first()).toBeVisible();
-  await expect(page.getByText('This profile highlights placement or alignment settings to review in your final upload.').first()).toBeVisible();
+  await expect(page.getByText('Platform: YouTube upload')).toBeVisible();
+  await expect(page.getByText('Check placement after YouTube upload').first()).toBeVisible();
+  await page.getByLabel('Publishing platform').selectOption('html');
+  await expect(page.getByText('Platform: HTML video track')).toBeVisible();
+  await page.getByLabel('Caption text').fill('1\n00:00:01,000 --> 00:00:03,000\nSRT caption.');
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByText('HTML video track needs WebVTT')).toBeVisible();
 });
 
 test('@claim:caption-check-categories shows every advertised check category', async ({ page }) => {
   await page.goto('/demo');
-  for (const finding of ['words per minute', 'Long caption line', 'Styled text found', 'Review placement settings', 'Review caption markup', 'Speaker cue found']) {
+  for (const finding of ['words per minute', 'Long caption line', 'Styled text found', 'Check placement after YouTube upload', 'Check markup after YouTube upload', 'Speaker cue found']) {
     await expect(page.getByText(finding, { exact: false }).first()).toBeVisible();
   }
+});
+
+test('F-V3-1 malformed SRT cues and invalid seconds can never report ready', async ({ page }) => {
+  await page.goto('/demo');
+  const mixed = `1
+00:00:01,000 --> 00:00:03,000
+JORDAN: Valid cue.
+
+2
+00:00:AA,000 --> 00:00:07,000
+MORGAN: This cue is silently malformed.`;
+  await page.getByLabel('Caption text').fill(mixed);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByRole('heading', { name: '1 fix needed' })).toBeVisible();
+  await expect(page.getByText('Cue has an invalid timestamp')).toBeVisible();
+  await expect(page.getByText('Cue 2', { exact: true })).toBeVisible();
+  await expect(page.getByText('Ready to publish')).toHaveCount(0);
+  await page.getByLabel('Caption text').fill('1\n00:00:61,000 --> 00:00:63,000\nInvalid seconds.');
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByText('Cue has an invalid timestamp')).toBeVisible();
+  await expect(page.getByText('Ready to publish')).toHaveCount(0);
+});
+
+test('@claim:accessible-preview-styles compares three readable cue treatments', async ({ page }) => {
+  await page.goto('/demo');
+  const styles = [
+    ['White on black', 'rgb(255, 255, 255)', 'rgb(1, 6, 7)'],
+    ['Black on white', 'rgb(7, 21, 29)', 'rgb(255, 255, 255)'],
+    ['Yellow on black', 'rgb(255, 223, 127)', 'rgb(1, 6, 7)']
+  ] as const;
+  for (const [name, color, background] of styles) {
+    await page.getByLabel(name).check();
+    const computed = await page.locator('#preview-text').evaluate(element => {
+      const value = getComputedStyle(element);
+      return [value.color, value.backgroundColor];
+    });
+    expect(computed).toEqual([color, background]);
+  }
+});
+
+test('F-V3-5 keyboard platform changes and checks retain a useful focus position', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo');
+  await page.getByLabel('Publishing platform').focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByLabel('Publishing platform')).toBeFocused();
+  await expect(page.getByLabel('Publishing platform')).toHaveValue('html');
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByLabel('Publishing platform')).toBeFocused();
+  await expect(page.getByLabel('Publishing platform')).toHaveValue('youtube');
+  await page.getByRole('button', { name: 'Check captions' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#report-title')).toBeFocused();
 });
 
 test('@claim:reading-speed-threshold flags only cues above 180 words per minute', async ({ page }) => {
@@ -157,13 +214,13 @@ test('the documented demo query opens the isolated sample directly', async ({ pa
 
 test('clear and parse errors remove the stale cue preview', async ({ page }) => {
   await page.goto('/demo');
-  await expect(page.getByRole('heading', { name: 'Read it in context' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear' }).click();
-  await expect(page.getByRole('heading', { name: 'Read it in context' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toHaveCount(0);
   await page.getByLabel('Caption text').fill('not a timed caption file');
   await page.getByRole('button', { name: 'Check captions' }).click();
   await expect(page.getByRole('heading', { name: 'We could not read that caption file' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Read it in context' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toHaveCount(0);
 });
 
 test('keyboard focus is visible on file selection and moves to route headings', async ({ page }) => {
