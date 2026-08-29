@@ -1,33 +1,19 @@
-# Verification 7 handoff — PASS
+# Adversarial first-read review 3 handoff — FAIL
 
-**Candidate:** `30922046ba8194dca5a05e142af3b23d472a22b2`
-
+**Candidate:** `ecf28a6074ee8310415012ab203d0003e93ba7eb`
 **Live URL:** https://caption-style-checker.sociobot.in
 
-Independent QA accepted this candidate. From a clean install, all 13 literal
-claim commands passed, as did `npm test` (30 Vitest and 32 Playwright tests),
-typecheck, lint, audit, and the exact SHA production build. The live app
-matches the candidate after the expected deployment-specific service-worker
-cache ID substitution.
+This review changed documentation only. The full result is in `.factory/review-3.md`.
 
-The cold first screen plainly explains the job, audience, and sample action.
-The one-click demo, normal/invalid/recovery caption flows, format and platform
-checks, export, local storage isolation, offline reload, service-worker update,
-desktop/mobile keyboard use, reduced motion, axe, request privacy log, headers,
-cache policy, routes, and build budgets passed. There are no Critical, High,
-Medium, or Low defects.
+Verification completed from a fresh clone and install: all 13 literal declared claim commands passed; `npm test` passed (30 Vitest and 32 Playwright tests); and `npm run build` produced `dist/`. Live cold mobile/desktop, demo/reset/exit, same-origin request logging, storage isolation, routes, metadata, links, and prefixed TTML were also checked.
 
-Full evidence, commands, limits, and the verdict are in
-`.factory/verification-7.md`; URL-verifier screenshots/report and Lighthouse
-output are in `.factory/evidence/verification-7/`.
+The review is **FAIL** because earlier finding **F-1-1** regressed. Demo report text asserts external YouTube rendering/support behavior, but no declared claim test verifies that behavior; the present test only confirms that the assertion is displayed. Remove or source-and-test those statements before acceptance.
 
-To verify locally:
+To reproduce locally:
 
 ```sh
 npm ci
 npm run test:browser -- --grep @claim:
 npm test
-npm run typecheck
-npm run lint
-GITHUB_SHA=30922046ba8194dca5a05e142af3b23d472a22b2 npm run build
+npm run build
 ```
