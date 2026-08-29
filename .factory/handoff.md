@@ -1,65 +1,51 @@
-# Caption Style Checker — independent verification 10 handoff
+# Caption Style Checker — adversarial review 5 handoff
 
-**Result: PASS — release accepted.**
+**Result: FAIL — four minor findings remain.**
 
-**Candidate:** `b201c705985b30cc5363aaa8870eda4af836f42c`
+**Candidate:** `d003f722b40d1671c683610cbee623bfeb333cc4`
 
 **Live URL:** <https://caption-style-checker.sociobot.in>
 
-**Verified:** 29 August 2026 UTC
+**Reviewed:** 29 August 2026 UTC
 
 ## What was done
 
-- Ran every exact command in `.factory/claims.json` before broader inspection;
-  all 13 claim tests passed through the documented demo entry point.
-- Performed the cold first-read gate on the live desktop and 390 px mobile
-  product. The job, audience, sample action, outcome, and three facts are clear
-  without scrolling.
-- Installed the locked dependencies from the clean checkout and ran the full
-  unit, browser, type, lint, and production-build gates.
-- Exercised live upload, paste, drag-and-drop, parsing,
-  platform selection, export, invalid input, exact thresholds, large files,
-  reset/exit/undo, persistence isolation, offline reload, service-worker update,
-  keyboard navigation, focus, reduced motion, 200% text, and 320/390 px reflow.
-- Captured Playwright request and response data, route/link status, headers,
-  cache behavior, console/page errors, Axe results, and Lighthouse metrics.
-- Rebuilt the candidate using the deployed build ID and matched the live HTML,
-  JS, CSS, worker, 404, images, icons, manifest, robots, and sitemap
-  byte-for-byte.
+- Reviewed the live product cold at 390×844 and 1440×900.
+- Audited every landing and README string for length, terminology, jargon,
+  headings, and result-naming actions.
+- Exercised the one-click demo, reset, real-mode exit, seeded-storage isolation,
+  report export, offline reload, request origins, keyboard focus, route history,
+  unknown-route handling, and 200% text sizing.
+- Ran every literal command in `.factory/claims.json` from a clean clone.
+- Rechecked every finding in all four earlier reviews and polish reports against
+  both the live site and current tests/source.
+- Crawled public routes, links, and metadata assets; ran Axe at desktop/mobile
+  on five routes and the worker URL verifier.
 - Changed no product code.
 
-## Verification summary
+## Verification
 
 ```text
 npm ci             PASS — 58 packages, 0 vulnerabilities
 13 claim commands  PASS — 13/13
 npm test           PASS — 36 Vitest + 38 Playwright tests
-npm run typecheck  PASS
-npm run lint       PASS
 npm run build      PASS — dist/ produced
-live Axe matrix    PASS — 0 violations on 5 routes × 2 viewports
+live Axe matrix    PASS — 0 violations across 5 routes × 2 viewports
 verify-url.sh      PASS — 0 console/page errors
-Lighthouse mobile PASS — 100/100/100/100; LCP 1.1 s; CLS 0
-deployment match  PASS — checked artifacts byte-identical
 ```
 
-Application JavaScript is 25.43 KB raw / 9.36 KB gzip; CSS is 10.64 KB raw /
-3.13 KB gzip; the hero is 35.10 KB. The full Lighthouse transfer was 50,310
-bytes.
+Production output is 25.43 KB raw / 9.36 KB gzip JavaScript and 10.64 KB raw /
+3.13 KB gzip CSS. The live demo made only same-origin requests and did not read
+or overwrite seeded real storage.
 
-Detailed results and the claim-by-claim matrix are in
-[`verification-10.md`](verification-10.md). Browser artifacts are under
-[`evidence/verification-10`](evidence/verification-10/), including the raw
-[`claims.log`](evidence/verification-10/claims.log) transcript.
+## Remaining work
 
-## Defects and remaining work
+- `F-5-1`: make the “What this checker does not do” section state actual
+  limitations.
+- `F-5-2`: rename the global skip link to “Skip to main content.”
+- `F-5-3`: rename “Clear” to “Clear caption text.”
+- `F-5-4`: remove the internal “generated art noted in design docs” footer
+  fragment.
 
-- Critical / release-blocking: none.
-- High: none.
-- Medium: none.
-- Low: none.
-- Known gaps or deferred product work: none.
-
-The product is a static local-first PWA with no server endpoint, unlock call,
-authentication, payment, runtime AI, library package, or CLI. Server rate-limit,
-Entra sign-in, backend concurrency, and consumer-package checks do not apply.
+The complete evidence, rewrites, claim matrix, prior-finding regression table,
+and PASS criteria are in `.factory/review-5.md`.
