@@ -1,0 +1,23 @@
+{
+  "malformedSrt": true,
+  "invalidSeconds": true,
+  "htmlProfile": true,
+  "unsubmittedPastePreserved": true,
+  "htmlGuidance": true,
+  "youtubeGuidance": true,
+  "offsetTtmlSpeaker": true,
+  "reversedTimeNoSpeed": true,
+  "ttmlDuration": true,
+  "entitiesDecoded": true,
+  "previewStyles": true,
+  "keyboardFocus": true,
+  "semanticFixtures": {
+    "fv5-unsupported-markup.srt": "Unsupported SRT tag",
+    "fv5-styled-text.srt": "Check SRT styling after upload",
+    "fv5-referenced-color.ttml": "Check TTML styling after upload",
+    "fv5-referenced-placement.ttml": "Placement settings found"
+  },
+  "stalePreviewCleared": true,
+  "realRefresh": true,
+  "staleShellIgnored": true
+}

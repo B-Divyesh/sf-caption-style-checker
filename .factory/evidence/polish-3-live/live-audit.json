@@ -1,0 +1,122 @@
+{
+  "routes": {
+    "/": {
+      "status": 200,
+      "title": "Caption Style Checker — Check captions before upload",
+      "h1": [
+        "Check captions before upload"
+      ],
+      "main": 1,
+      "description": "Check timed caption files for speed, long lines, speaker cues, markup, and placement settings before upload.",
+      "canonical": "https://caption-style-checker.sociobot.in/",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "errors": []
+    },
+    "/demo": {
+      "status": 200,
+      "title": "Demo — Caption Style Checker",
+      "h1": [
+        "Check sample captions"
+      ],
+      "main": 1,
+      "description": "Try Caption Style Checker with an isolated sample caption file.",
+      "canonical": "https://caption-style-checker.sociobot.in/demo",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "errors": []
+    },
+    "/?demo=1": {
+      "status": 200,
+      "title": "Demo — Caption Style Checker",
+      "h1": [
+        "Check sample captions"
+      ],
+      "main": 1,
+      "description": "Try Caption Style Checker with an isolated sample caption file.",
+      "canonical": "https://caption-style-checker.sociobot.in/demo",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "errors": []
+    },
+    "/privacy": {
+      "status": 200,
+      "title": "Privacy — Caption Style Checker",
+      "h1": [
+        "Privacy"
+      ],
+      "main": 1,
+      "description": "Learn how Caption Style Checker handles caption text in your browser.",
+      "canonical": "https://caption-style-checker.sociobot.in/privacy",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "errors": []
+    },
+    "/terms": {
+      "status": 200,
+      "title": "Terms — Caption Style Checker",
+      "h1": [
+        "Terms"
+      ],
+      "main": 1,
+      "description": "Read the terms for Caption Style Checker.",
+      "canonical": "https://caption-style-checker.sociobot.in/terms",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "errors": []
+    },
+    "/not-a-real-page": {
+      "status": 404,
+      "title": "Page not found — Caption Style Checker",
+      "h1": [
+        "Page not found"
+      ],
+      "main": 1,
+      "description": "Return to Caption Style Checker to check a caption file.",
+      "canonical": "https://caption-style-checker.sociobot.in/not-a-real-page",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "errors": []
+    }
+  },
+  "demo": {
+    "oneClickUrl": "https://caption-style-checker.sociobot.in/?demo=1",
+    "banner": true,
+    "reset": true,
+    "findings": 9,
+    "scopedCopy": true,
+    "sameOriginRequests": true,
+    "mobileCtaBottom": 488.5625,
+    "mobileOverflow": false,
+    "exportScoped": true,
+    "prefixedTtml": "TTML · 1 cue · 3 sec",
+    "unsupportedMarkupScoped": true
+  },
+  "storage": {
+    "demoReadRealKey": false,
+    "demoChangedRealKey": false,
+    "realTextRestored": true
+  },
+  "offline": {
+    "queryDemoReloaded": true
+  },
+  "focus": {
+    "forward": true,
+    "back": true
+  },
+  "accessibility": {
+    "desktop": {
+      "seriousCritical": 0,
+      "allViolations": 0
+    },
+    "mobile": {
+      "seriousCritical": 0,
+      "allViolations": 0
+    }
+  },
+  "headers": {
+    "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "nosniff": "nosniff",
+    "referrerPolicy": "strict-origin-when-cross-origin"
+  }
+}
