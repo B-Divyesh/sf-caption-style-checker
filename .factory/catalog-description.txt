@@ -1,1 +1,1 @@
-Check WebVTT, SRT, and timed TTML captions before publishing.
+Check caption speed, lines, speakers, markup, and placement before publishing.

@@ -1,6 +1,6 @@
 # Copy audit
 
-Audited against the polish-four repair landing and demo on 29 August 2026. The first
+Audited against the polish-five repair landing and demo on 29 August 2026. The first
 screen reads aloud in one breath: “Check captions before upload for video
 educators; try the sample to load a file and see its warnings.”
 
@@ -10,7 +10,7 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 
 | Copy | Words | Result |
 | --- | ---: | --- |
-| Skip to checker | 3 | pass |
+| Skip to main content | 4 | pass |
 | CAPTION//CHECK | 1 | pass |
 | Demo | 1 | pass |
 | Checker | 1 | pass |
@@ -37,7 +37,7 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | Caption text | 2 | pass |
 | Paste a caption file here | 5 | pass |
 | Check captions | 2 | pass |
-| Clear | 1 | pass |
+| Clear caption text | 3 | pass |
 | No caption file loaded | 4 | pass |
 | Drop a WebVTT, SRT, or timed TTML file | 9 | pass |
 | Your checks will appear here. | 5 | pass |
@@ -51,12 +51,12 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | Fix | 1 | pass |
 | Review fast cues, long lines, markup, placement, and speakers. | 9 | pass |
 | What this checker does not do | 6 | pass |
-| It checks timed caption files in this browser. | 8 | pass |
+| It does not upload captions, edit video, translate speech, or predict the published result. | 14 | pass |
 | Review the final upload before publishing. | 6 | pass |
 | Caption checks for people publishing video lessons. | 7 | pass |
 | Terms | 1 | pass |
 | Built by Param Factory (external site) | 6 | pass |
-| v1.1.0 · generated art noted in design docs | 8 | pass |
+| v1.1.0 | 1 | pass |
 
 ## Demo and result states
 
@@ -125,6 +125,7 @@ publishing platform renders, removes, or preserves caption features.
 | Caption text stays in this browser. | 6 | pass |
 | Real mode saves the current caption text in this browser for refresh. | 11 | pass |
 | Demo mode keeps its sample text only in memory. | 9 | pass |
+| It does not upload captions, edit video, translate speech, or predict the published result. | 14 | pass |
 | Review the final upload before publishing. | 6 | pass |
 
 ## Terminology

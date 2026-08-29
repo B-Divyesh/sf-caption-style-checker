@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const base = process.argv[2] || 'https://caption-style-checker.sociobot.in';
-const evidence = process.argv[3] || '.factory/evidence/polish-4-live';
+const evidence = process.argv[3] || '.factory/evidence/polish-5-live';
 mkdirSync(evidence, { recursive: true });
 
 const expectedRoutes = [
@@ -96,6 +96,10 @@ const firstScreen = await root.evaluate(() => {
       document.querySelector('meta[property="og:image:height"][content="630"]') &&
       document.querySelector('meta[name="twitter:image"]')
     ),
+    skipText: document.querySelector('.skip')?.textContent?.trim(),
+    limitations: document.querySelector('.limits')?.textContent?.replace(/\s+/g, ' ').trim(),
+    clearAction: document.querySelector('#clear')?.textContent?.trim(),
+    footerVersion: document.querySelector('footer small')?.textContent?.trim(),
     bodyText: document.body.innerText
   };
 });
@@ -104,6 +108,10 @@ record('F-1-6', firstScreen.bodyText.includes('WebVTT, SRT, timed TTML') && !fir
 record('F-1-7', !/preflight|local preflight desk/i.test(firstScreen.bodyText), 'preflight or desk jargon returned');
 record('F-1-8', /How it works/i.test(firstScreen.bodyText) && /Check a caption file in three steps/i.test(firstScreen.bodyText), 'three-step section headings are not plain');
 record('F-4-1', !firstScreen.badPlatformChangeCopy && firstScreen.finalUploadGuidanceCount === 2, 'platform-change assertion remains or guidance is incomplete');
+record('F-5-1', firstScreen.limitations?.includes('It does not upload captions, edit video, translate speech, or predict the published result.') && firstScreen.limitations?.includes('Review the final upload before publishing.'), 'limitations section does not state the product boundaries');
+record('F-5-2', firstScreen.skipText === 'Skip to main content', 'skip link names the wrong destination');
+record('F-5-3', firstScreen.clearAction === 'Clear caption text', 'clear action does not name its target');
+record('F-5-4', firstScreen.footerVersion === 'v1.1.0', 'footer exposes internal documentation text');
 record('F-1-12', await root.getByRole('link', { name: 'Built by Param Factory (external site)' }).getAttribute('href') === 'https://sociobot.in', 'external footer label or URL is wrong');
 await root.locator('header a[href="/privacy"]').focus();
 await root.keyboard.press('Enter');

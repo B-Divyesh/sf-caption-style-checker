@@ -29,10 +29,13 @@ Caption text stays in this browser. Real mode saves the current caption text in
 this browser for refresh. Demo mode keeps its sample text only in memory. See
 `/privacy` and `/terms` in the app.
 
+It does not upload captions, edit video, translate speech, or predict the
+published result. Review the final upload before publishing.
+
 Platform rules were reviewed on 29 August 2026 against the linked
 [YouTube caption formats](https://support.google.com/youtube/answer/2734698?hl=en)
 and [WebVTT format](https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API/Web_Video_Text_Tracks_Format)
-guidance. Review the final upload before publishing.
+guidance.
 
 ## Deploy
 

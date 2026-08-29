@@ -31,6 +31,17 @@ test('mobile controls have usable touch targets', async ({ page }) => {
   expect(undersized).toEqual([]);
 });
 
+test('F-5-2 the global skip link names and focuses each route main', async ({ page }) => {
+  for (const route of ['/', '/demo', '/privacy', '/terms', '/not-a-real-page']) {
+    await page.goto(route);
+    const skip = page.getByRole('link', { name: 'Skip to main content', exact: true });
+    await page.keyboard.press('Tab');
+    await expect(skip).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('main')).toBeFocused();
+  }
+});
+
 test('mobile first screen keeps the sample outcome beside its primary action', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');

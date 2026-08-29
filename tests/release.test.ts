@@ -87,4 +87,18 @@ describe('release contracts', () => {
     expect(copy).toContain('Review the final upload before publishing.');
     expect(copy).not.toMatch(/Platform (?:support|rules) change/i);
   });
+
+  it('F-5-1 through F-5-4 keep the reviewed copy repairs in the release', () => {
+    const documents = [readFileSync('index.html', 'utf8'), readFileSync('404.html', 'utf8')];
+    const app = readFileSync('src/main.ts', 'utf8');
+    for (const document of documents) {
+      expect(document).toContain('Skip to main content');
+      expect(document).not.toContain('Skip to checker');
+    }
+    expect(app).toContain('It does not upload captions, edit video, translate speech, or predict the published result.');
+    expect(app).toContain('Clear caption text');
+    expect(app).not.toContain('>Clear</button>');
+    expect(app).toContain('<small>v1.1.0</small>');
+    expect(app).not.toContain('generated art noted in design docs');
+  });
 });

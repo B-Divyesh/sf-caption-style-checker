@@ -45,6 +45,23 @@ test('@claim:local-caption-check keeps demo requests on this origin', async ({ p
   expect(requests.every(url => new URL(url).hostname === '127.0.0.1')).toBeTruthy();
 });
 
+test('@claim:scope-limitations keeps caption checking local and excludes unrelated tools', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'What this checker does not do' })).toBeVisible();
+  await expect(page.getByText('It does not upload captions, edit video, translate speech, or predict the published result.')).toBeVisible();
+  await expect(page.locator('input[type="file"]')).toHaveAttribute('accept', /text\/vtt/);
+  await expect(page.locator('input[type="file"]')).not.toHaveAttribute('accept', /video|audio/);
+  await expect(page.getByRole('button', { name: /translate|edit video|predict/i })).toHaveCount(0);
+
+  const requests: Array<{ method: string; url: string; body: string | null }> = [];
+  page.on('request', request => requests.push({ method: request.method(), url: request.url(), body: request.postData() }));
+  await page.getByLabel('Caption text').fill('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nLOCAL_ONLY_MARKER');
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.locator('.report')).toBeVisible();
+  expect(requests.filter(request => request.method !== 'GET')).toEqual([]);
+  expect(requests.some(request => `${request.url}${request.body || ''}`.includes('LOCAL_ONLY_MARKER'))).toBe(false);
+});
+
 test('@claim:free-to-use shows no payment gate', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Free to use.')).toBeVisible();
@@ -332,7 +349,7 @@ test('the documented demo query opens the isolated sample directly', async ({ pa
 test('clear and parse errors remove the stale cue preview', async ({ page }) => {
   await page.goto('/demo');
   await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toBeVisible();
-  await page.getByRole('button', { name: 'Clear' }).click();
+  await page.getByRole('button', { name: 'Clear caption text' }).click();
   await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toHaveCount(0);
   await page.getByLabel('Caption text').fill('not a timed caption file');
   await page.getByRole('button', { name: 'Check captions' }).click();
@@ -340,11 +357,11 @@ test('clear and parse errors remove the stale cue preview', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toHaveCount(0);
 });
 
-test('F-V8-2 Clear offers one-action recovery and restores real browser storage', async ({ page }) => {
+test('F-V8-2 Clear caption text offers one-action recovery and restores real browser storage', async ({ page }) => {
   const source = '1\n00:00:01,000 --> 00:00:03,000\nSaved caption.';
   await page.goto('/');
   await page.getByLabel('Caption text').fill(source);
-  await page.getByRole('button', { name: 'Clear' }).click();
+  await page.getByRole('button', { name: 'Clear caption text' }).click();
   await expect(page.getByLabel('Caption text')).toHaveValue('');
   await expect(page.getByRole('button', { name: 'Undo clear' })).toBeFocused();
   await expect(page.getByRole('status')).toContainText('Caption text cleared.');
