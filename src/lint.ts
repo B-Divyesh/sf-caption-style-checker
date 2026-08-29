@@ -61,10 +61,41 @@ function clockTime(value: string): number {
   return hours * 3600 + minutes * 60 + seconds + fraction;
 }
 
-function ttmlTime(value: string): number {
-  const offset = /^(\d+(?:\.\d+)?)(h|m|s|ms)$/.exec(value.trim());
-  if (offset) return Number(offset[1]) * ({ h: 3600, m: 60, s: 1, ms: 0.001 }[offset[2]] || 0);
-  return clockTime(value);
+type TtmlTiming = { frameRate: number; effectiveFrameRate: number; subFrameRate: number; tickRate: number };
+
+function ttmlTiming(source: string): TtmlTiming {
+  const root = /<(?:[a-z_][\w.-]*:)?tt\b([^>]*)>/i.exec(source)?.[1] || '';
+  const attrs = attributes(root);
+  const parameter = (name: string) => [...attrs].find(([key]) => localName(key) === name)?.[1];
+  const declaredFrameRate = Number(parameter('framerate') || 30);
+  const frameRate = Number.isFinite(declaredFrameRate) && declaredFrameRate > 0 ? declaredFrameRate : 30;
+  const multiplier = /^(\d+)\s+(\d+)$/.exec(parameter('frameratemultiplier') || '1 1');
+  const numerator = Number(multiplier?.[1] || 1);
+  const denominator = Number(multiplier?.[2] || 1);
+  const effectiveFrameRate = denominator > 0 ? frameRate * numerator / denominator : frameRate;
+  const declaredSubFrameRate = Number(parameter('subframerate') || 1);
+  const subFrameRate = Number.isInteger(declaredSubFrameRate) && declaredSubFrameRate > 0 ? declaredSubFrameRate : 1;
+  const declaredTickRate = Number(parameter('tickrate'));
+  const tickRate = Number.isFinite(declaredTickRate) && declaredTickRate > 0 ? declaredTickRate : effectiveFrameRate * subFrameRate;
+  return { frameRate, effectiveFrameRate, subFrameRate, tickRate };
+}
+
+function ttmlTime(value: string, timing: TtmlTiming): number {
+  const normalized = value.trim();
+  const offset = /^(\d+(?:\.\d+)?)(h|m|s|ms|f|t)$/.exec(normalized);
+  if (offset) {
+    const units = { h: 3600, m: 60, s: 1, ms: 0.001, f: 1 / timing.effectiveFrameRate, t: 1 / timing.tickRate };
+    return Number(offset[1]) * units[offset[2] as keyof typeof units];
+  }
+  const frames = /^(\d+):(\d{2}):(\d{2}):(\d+)(?:\.(\d+))?$/.exec(normalized);
+  if (!frames) return clockTime(normalized);
+  const hours = Number(frames[1]);
+  const minutes = Number(frames[2]);
+  const seconds = Number(frames[3]);
+  const frame = Number(frames[4]);
+  const subFrame = Number(frames[5] || 0);
+  if (minutes > 59 || seconds > 59 || frame >= timing.frameRate || subFrame >= timing.subFrameRate) return NaN;
+  return hours * 3600 + minutes * 60 + seconds + frame / timing.effectiveFrameRate + subFrame / (timing.subFrameRate * timing.effectiveFrameRate);
 }
 
 function decodeCharacterReferences(value: string) {
@@ -176,6 +207,7 @@ export function parse(source: string): ParseResult {
     const cues: Cue[] = [];
     const findings: Finding[] = [];
     const styles = ttmlStyles(source);
+    const timing = ttmlTiming(source);
     let cueCount = 0;
     for (const match of source.matchAll(/<(?:[a-z_][\w.-]*:)?p\b([^>]*)>([\s\S]*?)<\/(?:[a-z_][\w.-]*:)?p\s*>/gi)) {
       cueCount += 1;
@@ -183,9 +215,9 @@ export function parse(source: string): ParseResult {
       const begin = /\bbegin=["']([^"']+)/i.exec(attrs)?.[1];
       const end = /\bend=["']([^"']+)/i.exec(attrs)?.[1];
       const dur = /\bdur=["']([^"']+)/i.exec(attrs)?.[1];
-      const start = begin ? ttmlTime(begin) : NaN;
-      const endTime = end ? ttmlTime(end) : NaN;
-      const duration = dur ? ttmlTime(dur) : NaN;
+      const start = begin ? ttmlTime(begin, timing) : NaN;
+      const endTime = end ? ttmlTime(end, timing) : NaN;
+      const duration = dur ? ttmlTime(dur, timing) : NaN;
       const finish = Number.isNaN(endTime) && !Number.isNaN(start) && !Number.isNaN(duration) ? start + duration : endTime;
       if (Number.isNaN(start) || Number.isNaN(finish)) {
         findings.push(malformed(cueCount, `begin="${begin || ''}" end="${end || ''}" dur="${dur || ''}"`));
@@ -284,7 +316,12 @@ export function lint(source: string, profile = 'youtube'): Report | { error: str
     if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: cue.number });
     if (/<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Confirm that each speaker name is clear in the caption text.', cue: cue.number });
   });
-  if (parsed.cues.length && !parsed.cues.some(cue => /<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text))) findings.push({ level: 'note', code: 'speaker-missing', title: 'No speaker labels found', detail: 'Add names when more than one voice speaks or identity matters.' });
+  const speakerCues = parsed.cues.map(cue => /<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text));
+  if (speakerCues.some(Boolean)) {
+    speakerCues.forEach((labelled, index) => {
+      if (!labelled) findings.push({ level: 'warning', code: 'speaker-missing', title: 'Speaker label missing', detail: 'This file uses speaker labels, but this cue has none. Add a label if the speaker changes.', cue: parsed.cues[index].number });
+    });
+  } else if (parsed.cues.length) findings.push({ level: 'note', code: 'speaker-missing', title: 'No speaker labels found', detail: 'Add names when more than one voice speaks or identity matters.' });
   const duration = parsed.cues.length ? Math.max(...parsed.cues.map(cue => cue.end)) : 0;
   return { format: parsed.format, cues: parsed.cues, cueCount: parsed.cueCount, findings, duration, profile: selected.label };
 }

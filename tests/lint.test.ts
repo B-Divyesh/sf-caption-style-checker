@@ -75,6 +75,25 @@ MORGAN: This cue is malformed.`;
       expect(result.findings.some(finding => finding.code === 'malformed-time')).toBe(false);
     }
   });
+  it('F-V8-3 reads TTML frame and subframe clock times from timing parameters', () => {
+    const source = '<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="30" ttp:subFrameRate="2"><body><div><p begin="00:00:01:15.1" end="00:00:03:00">JORDAN: Frame timed caption.</p></div></body></tt>';
+    const result = lint(source);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.cues[0].start).toBeCloseTo(1 + 15.5 / 30);
+      expect(result.cues[0].end).toBe(3);
+      expect(result.findings.some(finding => finding.code === 'malformed-time')).toBe(false);
+    }
+  });
+  it('reads TTML frame and tick offsets with an effective frame rate', () => {
+    const source = '<tt xmlns:ttp="urn:ttml:parameter" ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001" ttp:tickRate="100"><body><p begin="30f" dur="100t">JORDAN: Offset timing.</p></body></tt>';
+    const result = parse(source);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.cues[0].start).toBeCloseTo(1.001);
+      expect(result.cues[0].end).toBeCloseTo(2.001);
+    }
+  });
   it('F-V4-4 decodes named and numeric character references in cue text', () => {
     const result = parse('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nFish &amp; chips &lt;fresh&gt; &#35;1 &#x1F41F;');
     expect('error' in result).toBe(false);
@@ -91,6 +110,20 @@ describe('caption checks', () => {
       expect(result.findings.some(f => f.code === 'speed')).toBe(true);
       expect(result.findings.some(f => f.code === 'placement')).toBe(true);
       expect(result.findings.some(f => f.code === 'speaker')).toBe(true);
+    }
+  });
+  it('F-V8-1 flags every unlabeled cue when the file uses speaker labels', () => {
+    const source = `1
+00:00:00,000 --> 00:00:02,000
+JORDAN: First speaker.
+
+2
+00:00:02,100 --> 00:00:04,000
+Second speaker without a label.`;
+    const result = lint(source);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.findings).toContainEqual(expect.objectContaining({ level: 'warning', code: 'speaker-missing', title: 'Speaker label missing', cue: 2 }));
     }
   });
   it('flags platform-specific markup without a parse error', () => {

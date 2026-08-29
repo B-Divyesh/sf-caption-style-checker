@@ -18,13 +18,13 @@ test('@claim:sample-preflight loads the isolated sample and visible warnings', a
   await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start for real' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Check sample captions' })).toBeVisible();
-  await expect(page.locator('.finding')).toHaveCount(9);
+  await expect(page.locator('.finding')).toHaveCount(11);
   await expect(page.getByText('Placement settings found').first()).toBeVisible();
   await expect(page.getByText('This cue uses placement or alignment settings. Check the final upload before publishing.').first()).toBeVisible();
   await page.getByLabel('Caption text').fill('temporary demo edit');
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.getByLabel('Caption text')).toContainText('WEBVTT');
-  await expect(page.locator('.finding')).toHaveCount(9);
+  await expect(page.locator('.finding')).toHaveCount(11);
 });
 
 test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
@@ -57,7 +57,8 @@ test('@claim:caption-formats visibly checks WebVTT, SRT, and timed TTML', async 
     ['WebVTT', 'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nHello world'],
     ['SRT', '1\n00:00:01,000 --> 00:00:03,000\nHello world'],
     ['TTML', '<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="1s" end="3s">JORDAN: Hello <span>world</span></p></div></body></tt>'],
-    ['TTML', fixture('prefixed-timed.ttml')]
+    ['TTML', fixture('prefixed-timed.ttml')],
+    ['TTML', '<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="30"><body><div><p begin="00:00:01:15" end="00:00:03:00">JORDAN: Frame timed caption.</p></div></body></tt>']
   ] as const;
   for (const [format, source] of formats) {
     await page.getByLabel('Caption text').fill(source);
@@ -184,6 +185,32 @@ test('F-V4-4 decodes character references in the cue preview', async ({ page }) 
   await expect(page.locator('#preview-text')).toHaveText('JORDAN: Fish & chips <fresh> #1');
 });
 
+test('F-V8-1 a partially labelled file cannot report ready to publish', async ({ page }) => {
+  const source = `1
+00:00:00,000 --> 00:00:02,000
+JORDAN: First speaker.
+
+2
+00:00:02,100 --> 00:00:04,000
+Second speaker without a label.`;
+  await page.goto('/demo');
+  await page.getByLabel('Caption text').fill(source);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByRole('heading', { name: '1 warning to review' })).toBeVisible();
+  await expect(page.getByText('Speaker label missing')).toBeVisible();
+  await expect(page.getByText('Cue 2', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ready to publish' })).toHaveCount(0);
+});
+
+test('F-V8-3 frame-timed TTML is accepted by the timed TTML path', async ({ page }) => {
+  const source = '<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="30"><body><div><p begin="00:00:01:15" end="00:00:03:00">JORDAN: Frame timed caption.</p></div></body></tt>';
+  await page.goto('/demo');
+  await page.getByLabel('Caption text').fill(source);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.locator('.report .eyebrow')).toContainText('TTML · 1 cue · 3 sec');
+  await expect(page.getByText('Cue has an invalid timestamp')).toHaveCount(0);
+});
+
 test('@claim:accessible-preview-styles compares three readable cue treatments', async ({ page }) => {
   await page.goto('/demo');
   const styles = [
@@ -303,6 +330,30 @@ test('clear and parse errors remove the stale cue preview', async ({ page }) => 
   await page.getByRole('button', { name: 'Check captions' }).click();
   await expect(page.getByRole('heading', { name: 'We could not read that caption file' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Compare accessible styles' })).toHaveCount(0);
+});
+
+test('F-V8-2 Clear offers one-action recovery and restores real browser storage', async ({ page }) => {
+  const source = '1\n00:00:01,000 --> 00:00:03,000\nSaved caption.';
+  await page.goto('/');
+  await page.getByLabel('Caption text').fill(source);
+  await page.getByRole('button', { name: 'Clear' }).click();
+  await expect(page.getByLabel('Caption text')).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'Undo clear' })).toBeFocused();
+  await expect(page.getByRole('status')).toContainText('Caption text cleared.');
+  expect(await page.evaluate(() => localStorage.getItem('caption-source'))).toBeNull();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Caption text')).toHaveValue(source);
+  await expect(page.getByLabel('Caption text')).toBeFocused();
+  expect(await page.evaluate(() => localStorage.getItem('caption-source'))).toBe(source);
+});
+
+test('F-V8-4 empty Check keeps keyboard focus and announces the next action', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Check captions' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Caption text')).toBeFocused();
+  await expect(page.getByLabel('Caption text')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByRole('alert')).toHaveText('Paste caption text or choose a file before checking.');
 });
 
 test('keyboard focus is visible on file selection and moves to route headings', async ({ page }) => {

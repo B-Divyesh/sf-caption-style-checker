@@ -3,11 +3,22 @@ import { describe, expect, it } from 'vitest';
 
 describe('release contracts', () => {
   it('gives every declared claim exactly one tagged test', () => {
-    const claims = JSON.parse(readFileSync('.factory/claims.json', 'utf8')) as Array<{ id: string }>;
+    const claims = JSON.parse(readFileSync('.factory/claims.json', 'utf8')) as Array<{ id: string; test: string }>;
     const tests = [readFileSync('tests/app.spec.ts', 'utf8'), readFileSync('tests/lint.test.ts', 'utf8')].join('\n');
     for (const claim of claims) {
       expect(tests.match(new RegExp(`@claim:${claim.id}`, 'g')) || [], claim.id).toHaveLength(1);
+      expect(claim.test).toBe(`npm run test:claim -- @claim:${claim.id}`);
     }
+  });
+
+  it('F-V8-5 bootstraps the locked browser test dependency for pristine-checkout claim runs', () => {
+    const runner = readFileSync('scripts/run-claim.mjs', 'utf8');
+    const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
+    expect(packageJson.scripts['test:claim']).toBe('node scripts/run-claim.mjs');
+    expect(packageJson.devDependencies['@playwright/test']).toBe('1.58.2');
+    expect(runner).toContain("accessSync('node_modules/.bin/playwright')");
+    expect(runner).toContain("['ci', '--ignore-scripts', '--no-audit', '--no-fund']");
+    expect(runner).toContain("['run', 'test:browser', '--', '--grep', claim]");
   });
 
   it('routes unknown Azure Static Web Apps paths to a real HTTP 404', () => {

@@ -1,6 +1,6 @@
 # Copy audit
 
-Audited against the round-three repaired landing and demo on 29 August 2026. The first
+Audited against the verifier-eight repair landing and demo on 29 August 2026. The first
 screen reads aloud in one breath: “Check captions before upload for video
 educators; try the sample to load a file and see its warnings.”
 
@@ -83,6 +83,9 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | We could not read that caption file | 7 | pass |
 | Cue has an invalid timestamp | 5 | pass |
 | Use minutes and seconds from 00 to 59. | 8 | pass |
+| Paste caption text or choose a file before checking. | 9 | pass |
+| Caption text cleared. | 3 | pass |
+| Undo clear | 2 | pass |
 
 ## Sample and unsupported-markup findings
 
@@ -94,6 +97,8 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | This cue uses v, i markup. Check the final upload before publishing. | 12 | pass |
 | Speaker cue found | 3 | pass |
 | Confirm that each speaker name is clear in the caption text. | 11 | pass |
+| Speaker label missing | 3 | pass |
+| This file uses speaker labels, but this cue has none. Add a label if the speaker changes. | 17 | pass |
 | Unsupported WebVTT tag | 3 | pass |
 | Remove &lt;foo&gt;. This markup is outside this checker's supported WebVTT markup. | 11 | pass |
 | Unsupported SRT tag | 3 | pass |

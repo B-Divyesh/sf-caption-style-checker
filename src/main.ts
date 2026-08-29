@@ -12,13 +12,16 @@ let profile = 'youtube';
 let report: Report | null = null;
 let activeCue = 0;
 let previewStyle = 'white-on-black';
+let editorError = '';
+let clearedSource: { source: string; demo: boolean } | null = null;
 
 function currentSource() {
   if (demoMode()) return demoSource;
   if (realSource === null) realSource = localStorage.getItem(storageKey) || '';
   return realSource;
 }
-function updateSource(value: string) {
+function updateSource(value: string, keepUndo = false) {
+  if (!keepUndo) clearedSource = null;
   if (demoMode()) demoSource = value;
   else {
     realSource = value;
@@ -59,7 +62,11 @@ function renderReport() {
   return `<section class="report" aria-live="polite" aria-labelledby="report-title"><div class="report-head"><div><p class="eyebrow">${result.format} · ${result.cueCount} cue${result.cueCount === 1 ? '' : 's'} · ${Math.ceil(result.duration)} sec</p><h2 id="report-title" tabindex="-1">${summary}</h2><p>Platform: ${result.profile}</p></div><button class="secondary" id="export" type="button">Export report</button></div><div class="findings" tabindex="0" aria-label="Caption findings">${result.findings.length ? result.findings.map(f => `<article class="finding ${f.level}"><div>${tag(f.level)} ${f.cue ? `<span class="cue">Cue ${f.cue}</span>` : ''}</div><h3>${esc(f.title)}</h3><p>${esc(f.detail)}</p></article>`).join('') : `<article class="finding pass"><div>${tag('pass')}</div><h3>No issues in these checks</h3><p>Preview the cues below before you publish.</p></article>`}</div></section>`;
 }
 function profileNote() { const selected = PROFILES[profile] || PROFILES.youtube; return `<p class="profile-note">Rules reviewed ${selected.reviewed}. Platform support changes. <a href="${selected.source}" rel="external">Check ${esc(selected.label)} format guidance (external site).</a></p>`; }
-function checker() { return `<section class="checker" id="checker" aria-labelledby="checker-title"><div class="checker-top"><div><p class="eyebrow">Caption checker in your browser</p><h2 id="checker-title">Check a caption file</h2></div><label>Publishing platform<select id="profile"><option value="youtube" ${profile === 'youtube' ? 'selected' : ''}>YouTube upload</option><option value="html" ${profile === 'html' ? 'selected' : ''}>HTML video track</option></select></label></div>${profileNote()}<div class="work-grid"><div><label class="drop" id="dropzone" for="file"><input id="file" type="file" accept=".vtt,.srt,.ttml,.xml,text/vtt,application/x-subrip,application/ttml+xml" /><strong>Choose a caption file</strong><span>or drop it here · WebVTT, SRT, timed TTML</span></label><label class="source-label" for="source">Caption text</label><textarea id="source" spellcheck="false" placeholder="Paste a caption file here">${esc(currentSource())}</textarea><div class="editor-actions"><button class="secondary" id="check" type="button">Check captions</button><button class="plain" id="clear" type="button">Clear</button></div></div><div id="results">${renderReport()}</div></div>${report?.cues.length ? preview(report) : ''}</section>`; }
+function checker() {
+  const undo = clearedSource && clearedSource.demo === demoMode() ? `<div class="undo-notice" role="status"><span>Caption text cleared.</span><button class="plain" id="undo-clear" type="button">Undo clear</button></div>` : '';
+  const error = editorError ? `<p class="editor-error" id="editor-error" role="alert">${esc(editorError)}</p>` : '';
+  return `<section class="checker" id="checker" aria-labelledby="checker-title"><div class="checker-top"><div><p class="eyebrow">Caption checker in your browser</p><h2 id="checker-title">Check a caption file</h2></div><label>Publishing platform<select id="profile"><option value="youtube" ${profile === 'youtube' ? 'selected' : ''}>YouTube upload</option><option value="html" ${profile === 'html' ? 'selected' : ''}>HTML video track</option></select></label></div>${profileNote()}<div class="work-grid"><div><label class="drop" id="dropzone" for="file"><input id="file" type="file" accept=".vtt,.srt,.ttml,.xml,text/vtt,application/x-subrip,application/ttml+xml" /><strong>Choose a caption file</strong><span>or drop it here · WebVTT, SRT, timed TTML</span></label><label class="source-label" for="source">Caption text</label><textarea id="source" spellcheck="false" placeholder="Paste a caption file here" ${editorError ? 'aria-invalid="true" aria-describedby="editor-error"' : ''}>${esc(currentSource())}</textarea><div class="editor-actions"><button class="secondary" id="check" type="button">Check captions</button><button class="plain" id="clear" type="button">Clear</button></div>${error}${undo}</div><div id="results">${renderReport()}</div></div>${report?.cues.length ? preview(report) : ''}</section>`;
+}
 function preview(r: Report) { const cue = r.cues[activeCue] || r.cues[0]; return `<section class="preview" aria-labelledby="preview-title"><div><p class="eyebrow">Cue preview</p><h2 id="preview-title">Compare accessible styles</h2><p>Choose a cue, then compare three high-contrast treatments.</p><div class="cue-list">${r.cues.map((c, i) => `<button type="button" data-cue="${i}" class="${i === activeCue ? 'active' : ''}" aria-pressed="${i === activeCue}">${String(c.number).padStart(2, '0')} <span>${c.start.toFixed(1)}s</span></button>`).join('')}</div><fieldset class="style-options"><legend>Preview style</legend><label><input type="radio" name="preview-style" value="white-on-black" ${previewStyle === 'white-on-black' ? 'checked' : ''}> White on black</label><label><input type="radio" name="preview-style" value="black-on-white" ${previewStyle === 'black-on-white' ? 'checked' : ''}> Black on white</label><label><input type="radio" name="preview-style" value="yellow-on-black" ${previewStyle === 'yellow-on-black' ? 'checked' : ''}> Yellow on black</label></fieldset></div><figure class="screen ${previewStyle}" id="preview-screen"><figcaption id="preview-caption">${esc(previewStyle.replaceAll('-', ' '))} preview</figcaption><div class="caption-box" id="preview-text">${esc(cue.text || 'Empty cue')}</div></figure></section>`; }
 function shell(content: string) { return `<header><a class="mark" href="/" data-link><span aria-hidden="true">▰</span> CAPTION//CHECK</a><nav aria-label="Primary"><a href="/demo" data-link>Demo</a><a href="/#checker" data-link>Checker</a><a href="/privacy" data-link>Privacy</a></nav></header>${demoMode() ? `<div class="demo" role="status">Demo — sample data, nothing is saved <button id="reset-demo" type="button">Reset demo</button><button id="real" type="button">Start for real</button></div>` : ''}<main id="main" tabindex="-1">${content}</main><footer><p>Caption checks for people publishing video lessons.</p><div><a href="/privacy" data-link>Privacy</a><a href="/terms" data-link>Terms</a><a href="https://sociobot.in" rel="external">Built by Param Factory (external site)</a></div><small>v1.1.0 · generated art noted in design docs</small></footer><div class="announce" aria-live="polite"></div>`; }
 function landing() { return shell(`<section class="hero"><div class="hero-copy"><p class="eyebrow">Caption checker in your browser</p><h1 tabindex="-1">Check captions before upload</h1><p class="lead">For video educators who need readable captions and clear speaker cues before publishing.</p><div class="actions"><div class="action-block"><button class="primary" id="demo" type="button">Try it with sample data</button><span>Loads a sample file and shows its warnings.</span></div></div><ul class="facts"><li>Caption text stays in this browser.</li><li>Works offline after one visit.</li><li>Free to use.</li></ul></div><figure class="hero-art"><img src="/assets/signal-desk.webp" width="1024" height="1024" fetchpriority="high" decoding="async" alt="Pixel-art caption timing monitor on a compact control desk." /><figcaption>Review caption settings before upload.</figcaption></figure></section>${checker()}<section class="how" aria-labelledby="how-title"><p class="eyebrow">How it works</p><h2 id="how-title">Check a caption file in three steps</h2><ol><li><b>Load</b><span>Drop a WebVTT, SRT, or timed TTML file.</span></li><li><b>Choose</b><span>Select the publishing platform you need.</span></li><li><b>Fix</b><span>Review fast cues, long lines, markup, placement, and speakers.</span></li></ol></section><section class="limits" aria-labelledby="limits-title"><h2 id="limits-title">What this checker does not do</h2><p>It checks timed caption files in this browser. Platform rules change, so review the final upload before publishing.</p></section>`); }
@@ -91,12 +98,51 @@ function renderAndFocus(selector: string) {
 function bind() {
   document.querySelectorAll<HTMLAnchorElement>('[data-link]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); nav(a.getAttribute('href') || '/'); }));
   document.querySelector('#demo')?.addEventListener('click', () => nav('/?demo=1'));
-  document.querySelector('#real')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; nav('/'); });
-  document.querySelector('#reset-demo')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; activeCue = 0; render(); });
+  document.querySelector('#real')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; clearedSource = null; editorError = ''; nav('/'); });
+  document.querySelector('#reset-demo')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; clearedSource = null; editorError = ''; activeCue = 0; render(); });
   const textarea = document.querySelector<HTMLTextAreaElement>('#source');
-  textarea?.addEventListener('input', () => updateSource(textarea.value));
-  const check = () => { if (textarea) updateSource(textarea.value); activeCue = 0; renderAndFocus('#report-title'); };
-  document.querySelector('#check')?.addEventListener('click', check); document.querySelector('#clear')?.addEventListener('click', () => { updateSource(''); activeCue = 0; render(); });
+  textarea?.addEventListener('input', () => {
+    editorError = '';
+    updateSource(textarea.value);
+    textarea.removeAttribute('aria-invalid');
+    textarea.removeAttribute('aria-describedby');
+    document.querySelector('#editor-error')?.remove();
+    document.querySelector('.undo-notice')?.remove();
+  });
+  const check = () => {
+    const source = textarea?.value || '';
+    updateSource(source);
+    activeCue = 0;
+    if (!source.trim()) {
+      editorError = 'Paste caption text or choose a file before checking.';
+      renderAndFocus('#source');
+      return;
+    }
+    editorError = '';
+    renderAndFocus('#report-title');
+  };
+  document.querySelector('#check')?.addEventListener('click', check);
+  document.querySelector('#clear')?.addEventListener('click', () => {
+    const source = textarea?.value || '';
+    if (!source) {
+      textarea?.focus();
+      return;
+    }
+    clearedSource = { source, demo: demoMode() };
+    editorError = '';
+    updateSource('', true);
+    activeCue = 0;
+    renderAndFocus('#undo-clear');
+  });
+  document.querySelector('#undo-clear')?.addEventListener('click', () => {
+    const cleared = clearedSource;
+    if (!cleared || cleared.demo !== demoMode()) return;
+    clearedSource = null;
+    editorError = '';
+    updateSource(cleared.source);
+    activeCue = 0;
+    renderAndFocus('#source');
+  });
   document.querySelector<HTMLSelectElement>('#profile')?.addEventListener('change', e => { profile = (e.target as HTMLSelectElement).value; renderAndFocus('#profile'); });
   document.querySelector('#file')?.addEventListener('change', e => readFile((e.target as HTMLInputElement).files?.[0]));
   const dz = document.querySelector('#dropzone'); dz?.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); }); dz?.addEventListener('dragleave', () => dz.classList.remove('over')); dz?.addEventListener('drop', e => { const drag = e as DragEvent; drag.preventDefault(); dz.classList.remove('over'); readFile(drag.dataTransfer?.files[0]); });
@@ -115,7 +161,7 @@ function bind() {
   }));
   document.querySelector('#export')?.addEventListener('click', () => { if (!report) return; const body = [`Caption Style Checker`, `Publishing platform: ${report.profile}`, '', ...report.findings.map(f => `${f.level.toUpperCase()}${f.cue ? ` cue ${f.cue}` : ''}: ${f.title} — ${f.detail}`)].join('\n'); const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([body], { type: 'text/plain' })), download: 'caption-report.txt' }); a.click(); URL.revokeObjectURL(a.href); });
 }
-function readFile(file?: File) { if (!file) return; if (file.size > 2_000_000) { alert('This file is larger than 2 MB. Choose a smaller caption file.'); return; } const reader = new FileReader(); reader.onerror = () => alert('The file could not be read. Try choosing it again.'); reader.onload = () => { updateSource(String(reader.result || '')); activeCue = 0; render(); }; reader.readAsText(file); }
+function readFile(file?: File) { if (!file) return; if (file.size > 2_000_000) { alert('This file is larger than 2 MB. Choose a smaller caption file.'); return; } const reader = new FileReader(); reader.onerror = () => alert('The file could not be read. Try choosing it again.'); reader.onload = () => { editorError = ''; updateSource(String(reader.result || '')); activeCue = 0; render(); }; reader.readAsText(file); }
 function registerServiceWorker() {
   navigator.serviceWorker.addEventListener('message', event => { if (event.data?.type === 'shell-cached') (window as Window & { __captionShellCached?: boolean }).__captionShellCached = true; });
   navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(__BUILD_ID__)}`).then(async registration => {

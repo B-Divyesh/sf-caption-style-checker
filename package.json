@@ -10,7 +10,8 @@
     "lint": "tsc --noEmit",
     "test": "vitest run && playwright test",
     "test:unit": "vitest run",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:claim": "node scripts/run-claim.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
