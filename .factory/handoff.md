@@ -1,3 +1,32 @@
+# Review 2 handoff — release blocked
+
+## Outcome
+
+The adversarial first-read review on 29 August 2026 found one blocking issue in
+the live product. A valid timed TTML document using the standard `tt:` namespace
+prefix is rejected as not TTML, while the public landing page, README, and
+`caption-formats` claim promise timed TTML support. The full evidence and exact
+fixture are in `.factory/review-2.md` as **F-2-1**.
+
+## What the reviewer ran
+
+- Fresh live Chromium contexts at 390×844 and 1440×900.
+- The one-click `/demo` flow, Reset demo, Start for real, real-mode reload, and
+  same-origin request logging.
+- All 13 exact commands in `.factory/claims.json` (all pass), `npm test` (29
+  Vitest + 32 Playwright pass), and `npm run build` (produces `dist/`).
+- Live routes, metadata, links, back-button heading focus, 404, headers, and
+  the four earlier SRT/TTML regression fixtures.
+
+## Required next step
+
+Support standard namespace-prefixed TTML local names in the parser and add the
+fixture to `@claim:caption-formats`; alternatively narrow every public timed
+TTML promise to the actual accepted subset. Re-run the whole review after the
+live deployment changes. No product code was modified by this reviewer.
+
+---
+
 # Caption Style Checker independent verification 6 handoff
 
 ## Current release decision
