@@ -108,9 +108,12 @@ record('F-1-6', firstScreen.bodyText.includes('WebVTT, SRT, timed TTML') && !fir
 record('F-1-7', !/preflight|local preflight desk/i.test(firstScreen.bodyText), 'preflight or desk jargon returned');
 record('F-1-8', /How it works/i.test(firstScreen.bodyText) && /Check a caption file in three steps/i.test(firstScreen.bodyText), 'three-step section headings are not plain');
 record('F-4-1', !firstScreen.badPlatformChangeCopy && firstScreen.finalUploadGuidanceCount === 2, 'platform-change assertion remains or guidance is incomplete');
-record('F-5-1', firstScreen.limitations?.includes('It does not upload captions, edit video, translate speech, or predict the published result.') && firstScreen.limitations?.includes('Review the final upload before publishing.'), 'limitations section does not state the product boundaries');
-record('F-5-2', firstScreen.skipText === 'Skip to main content', 'skip link names the wrong destination');
-record('F-5-3', firstScreen.clearAction === 'Clear caption text', 'clear action does not name its target');
+const limitationsCopyOk = firstScreen.limitations?.includes('It does not upload captions, edit video, translate speech, or predict the published result.') && firstScreen.limitations?.includes('Review the final upload before publishing.');
+await root.keyboard.press('Tab');
+const skipFocused = await root.locator('.skip').evaluate(element => element === document.activeElement);
+await root.keyboard.press('Enter');
+const skipMovedFocus = await root.locator('main').evaluate(element => element === document.activeElement);
+record('F-5-2', firstScreen.skipText === 'Skip to main content' && skipFocused && skipMovedFocus, 'skip link does not accurately name and focus main content');
 record('F-5-4', firstScreen.footerVersion === 'v1.1.0', 'footer exposes internal documentation text');
 record('F-1-12', await root.getByRole('link', { name: 'Built by Param Factory (external site)' }).getAttribute('href') === 'https://sociobot.in', 'external footer label or URL is wrong');
 await root.locator('header a[href="/privacy"]').focus();
@@ -139,7 +142,7 @@ await demoContext.addInitScript(value => {
   };
 }, '1\n00:00:10,000 --> 00:00:12,000\nSaved real caption.');
 const demo = await demoContext.newPage();
-demo.on('request', req => demoRequests.push(req.url()));
+demo.on('request', req => demoRequests.push({ url: req.url(), method: req.method(), body: req.postData() }));
 await demo.goto(`${base}/?demo=1`, { waitUntil: 'networkidle' });
 await demo.screenshot({ path: join(evidence, 'demo-desktop-cold.png'), fullPage: true });
 assert((await demo.title()) === 'Demo — Caption Style Checker', 'query demo title mismatch');
@@ -149,6 +152,13 @@ const demoDidNotReadReal = !(await demo.evaluate(() => window.__storageReads)).i
 const demoDidNotChangeReal = (await demo.evaluate(() => localStorage.getItem('caption-source'))) === '1\n00:00:10,000 --> 00:00:12,000\nSaved real caption.';
 assert(demoDidNotReadReal, 'demo read real storage');
 assert(demoDidNotChangeReal, 'demo changed real storage');
+await demo.getByRole('button', { name: 'Clear caption text' }).click();
+const clearEmptiedSource = (await demo.getByLabel('Caption text').inputValue()) === '';
+const clearFocusedUndo = await demo.getByRole('button', { name: 'Undo clear' }).evaluate(element => element === document.activeElement);
+await demo.getByRole('button', { name: 'Undo clear' }).click();
+const undoRestoredSample = (await demo.getByLabel('Caption text').inputValue()).startsWith('WEBVTT');
+const undoFocusedSource = await demo.getByLabel('Caption text').evaluate(element => element === document.activeElement);
+record('F-5-3', firstScreen.clearAction === 'Clear caption text' && clearEmptiedSource && clearFocusedUndo && undoRestoredSample && undoFocusedSource, 'clear action label or one-action recovery failed');
 const sampleResultText = await demo.locator('#results').innerText();
 record('F-1-2', ['words per minute', 'Long caption line', 'Styled text found', 'Placement settings found', 'Markup to review', 'Speaker cue found'].every(copy => sampleResultText.includes(copy)), 'sample does not show every advertised category');
 const previewStyles = [
@@ -252,7 +262,9 @@ const restoredReal = (await demo.getByLabel('Caption text').inputValue()).includ
 await demo.reload({ waitUntil: 'networkidle' });
 const refreshedReal = (await demo.getByLabel('Caption text').inputValue()).includes('Saved real caption.');
 record('F-1-4', demoDidNotReadReal && demoDidNotChangeReal && restoredReal && refreshedReal, 'demo isolation or real refresh failed');
-assert(demoRequests.every(url => new URL(url).origin === base), 'demo made a cross-origin runtime request');
+const demoRequestBoundaryPass = demoRequests.every(request => new URL(request.url).origin === base && request.method === 'GET');
+record('F-5-1', limitationsCopyOk && demoRequestBoundaryPass, 'scope limits are absent or the caption flow made an upload request');
+assert(demoRequestBoundaryPass, 'demo made a cross-origin or mutating runtime request');
 await demoContext.close();
 
 const offlineContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -318,7 +330,8 @@ const report = {
     finalUploadGuidanceCount: firstScreen.finalUploadGuidanceCount
   },
   demo: {
-    requestOrigins: [...new Set(demoRequests.map(url => new URL(url).origin))],
+    requestOrigins: [...new Set(demoRequests.map(request => new URL(request.url).origin))],
+    requestMethods: [...new Set(demoRequests.map(request => request.method))],
     reset: true,
     exitRestoresReal: true,
     export: true,
