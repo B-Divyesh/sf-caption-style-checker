@@ -1,26 +1,29 @@
 # Landing copy audit
 
-The first screen was read aloud as one sentence: “Check captions before upload
-for video educators; try the sample to load a file and its warnings.”
+The first screen reads aloud in one breath: “Check captions before upload for
+video educators; try the sample to load a file and see its warnings.”
 
 | Copy | Words | Result |
 | --- | ---: | --- |
+| Caption checker in your browser | 5 | pass |
 | Check captions before upload | 4 | pass |
-| For video educators who need speaker cues and readable meaning to survive publishing. | 12 | pass |
-| Loads a sample file and its warnings. | 7 | pass |
+| For video educators who need readable captions and clear speaker cues before publishing. | 13 | pass |
+| Try it with sample data | 5 | pass |
+| Loads a sample file and shows its warnings. | 8 | pass |
 | Files stay in this browser. | 5 | pass |
 | Works offline after one visit. | 5 | pass |
 | Free to use. | 3 | pass |
-| Check what a platform might flatten. | 7 | pass |
+| Review caption settings before upload. | 5 | pass |
 | Check a caption file | 5 | pass |
-| Catch meaning before publishing | 5 | pass |
-| Drop a WebVTT, SRT, or TTML file. | 8 | pass |
-| Select the platform profile you need. | 6 | pass |
-| Review speed, placement, tags, and speakers. | 6 | pass |
-| It does not upload captions, host video, translate speech, or promise a platform will keep every feature. | 18 | pass |
-| Platform support changes. | 3 | pass |
+| Drop a WebVTT, SRT, or timed TTML file. | 9 | pass |
+| How it works | 3 | pass |
+| Check a caption file in three steps | 7 | pass |
+| Select the review profile you need. | 6 | pass |
+| Review fast cues, long lines, markup, placement, and speakers. | 9 | pass |
+| It checks timed caption files in this browser. | 8 | pass |
+| Review the final upload before publishing. | 6 | pass |
 
-No sentence is over 22 words. No banned wording appears.
+No sentence is over 22 words and no banned wording appears.
 
 ## Terminology
 
@@ -28,6 +31,6 @@ No sentence is over 22 words. No banned wording appears.
 | --- | --- |
 | Timed subtitle unit | cue |
 | Imported subtitle document | caption file |
-| Platform compatibility setting | platform profile |
-| Result from a check | warning |
+| Rule set | review profile |
+| Result from a check | finding |
 | Isolated one-click example | sample |

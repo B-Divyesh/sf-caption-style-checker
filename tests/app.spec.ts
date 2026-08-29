@@ -6,7 +6,7 @@ test('@claim:sample-preflight loads the isolated sample and visible warnings', a
   await expect(page.getByRole('status')).toContainText('nothing is saved');
   await expect(page.getByRole('heading', { name: 'Check sample captions' })).toBeVisible();
   await expect(page.locator('.finding')).toHaveCount(9);
-  await expect(page.getByText('Placement may be lost').first()).toBeVisible();
+  await expect(page.getByText('Review placement settings').first()).toBeVisible();
 });
 
 test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
@@ -45,7 +45,7 @@ test('@claim:caption-formats visibly checks WebVTT, SRT, and timed TTML', async 
     await page.getByRole('button', { name: 'Check captions' }).click();
     await expect(page.locator('.report .eyebrow')).toContainText(format);
   }
-  await expect(page.getByText('Placement may be lost')).toHaveCount(0);
+  await expect(page.getByText('Review placement settings')).toHaveCount(0);
 });
 
 test('@claim:report-export downloads the visible findings as text', async ({ page }) => {
@@ -57,8 +57,66 @@ test('@claim:report-export downloads the visible findings as text', async ({ pag
   const stream = await download.createReadStream();
   let text = '';
   for await (const chunk of stream) text += chunk.toString();
-  expect(text).toContain('Profile: YouTube basic captions');
-  expect(text).toContain('WARNING cue 1: Placement may be lost');
+  expect(text).toContain('Profile: Placement and markup review');
+  expect(text).toContain('WARNING cue 1: Review placement settings');
+});
+
+test('@claim:profile-review-findings highlights placement settings and markup for review', async ({ page }) => {
+  await page.goto('/demo');
+  await expect(page.getByText('Profile: Placement and markup review')).toBeVisible();
+  await expect(page.getByText('Review placement settings').first()).toBeVisible();
+  await expect(page.getByText('Review caption markup').first()).toBeVisible();
+  await expect(page.getByText('This profile highlights placement or alignment settings to review in your final upload.').first()).toBeVisible();
+});
+
+test('@claim:caption-check-categories shows every advertised check category', async ({ page }) => {
+  await page.goto('/demo');
+  for (const finding of ['words per minute', 'Long caption line', 'Styled text found', 'Review placement settings', 'Review caption markup', 'Speaker cue found']) {
+    await expect(page.getByText(finding, { exact: false }).first()).toBeVisible();
+  }
+});
+
+test('@claim:reading-speed-threshold flags only cues above 180 words per minute', async ({ page }) => {
+  await page.goto('/demo');
+  const atThreshold = '1\n00:00:00,000 --> 00:00:10,000\n' + Array(30).fill('word').join(' ');
+  await page.getByLabel('Caption text').fill(atThreshold);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByText('words per minute', { exact: false })).toHaveCount(0);
+  const aboveThreshold = '1\n00:00:00,000 --> 00:00:10,000\n' + Array(31).fill('word').join(' ');
+  await page.getByLabel('Caption text').fill(aboveThreshold);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await expect(page.getByText('186 words per minute')).toBeVisible();
+  await expect(page.getByText('This cue is above the 180-word-per-minute guidance threshold.')).toBeVisible();
+});
+
+test('@claim:real-session-refresh keeps real caption text after a reload', async ({ page }) => {
+  const realSource = '1\n00:00:10,000 --> 00:00:12,000\nSaved real caption.';
+  await page.goto('/');
+  await page.getByLabel('Caption text').fill(realSource);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  await page.reload();
+  await expect(page.getByLabel('Caption text')).toHaveValue(realSource);
+});
+
+test('@claim:demo-memory-isolation never reads or writes real caption storage', async ({ page }) => {
+  const realSource = '1\n00:00:10,000 --> 00:00:12,000\nMy saved real caption.';
+  await page.addInitScript(value => {
+    localStorage.setItem('caption-source', value);
+    const original = Storage.prototype.getItem;
+    (window as Window & { __storageReads?: string[] }).__storageReads = [];
+    Storage.prototype.getItem = function (key: string) {
+      (window as Window & { __storageReads?: string[] }).__storageReads?.push(key);
+      return original.call(this, key);
+    };
+  }, realSource);
+  await page.goto('/demo');
+  expect(await page.evaluate(() => (window as Window & { __storageReads?: string[] }).__storageReads)).not.toContain('caption-source');
+  const demoEdit = '1\n00:00:01,000 --> 00:00:03,000\nEdited only in demo.';
+  await page.getByLabel('Caption text').fill(demoEdit);
+  await page.getByRole('button', { name: 'Check captions' }).click();
+  expect(await page.evaluate(() => localStorage.getItem('caption-source'))).toBe(realSource);
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page.getByLabel('Caption text')).toHaveValue(realSource);
 });
 
 test('demo edits persist until reset and never replace real data', async ({ page }) => {
@@ -138,6 +196,6 @@ test('an online navigation ignores a stale cached shell', async ({ page }) => {
 
 test('unknown routes render the product 404 page', async ({ page }) => {
   await page.goto('/not-a-real-page');
-  await expect(page).toHaveTitle('Not found — Caption Style Checker');
+  await expect(page).toHaveTitle('Page not found — Caption Style Checker');
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
 });

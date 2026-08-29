@@ -1,44 +1,13 @@
 [
-  {
-    "id": "sample-preflight",
-    "claim": "Loads a sample file and its warnings.",
-    "where": "landing primary action",
-    "test": "npm run test:browser -- --grep @claim:sample-preflight",
-    "sandbox": "demo sample data; assert reading speed, placement, and speaker findings"
-  },
-  {
-    "id": "local-caption-check",
-    "claim": "Files stay in this browser.",
-    "where": "landing fact and privacy page",
-    "test": "npm run test:browser -- --grep @claim:local-caption-check",
-    "sandbox": "demo flow; intercept every request and assert only this app origin is used"
-  },
-  {
-    "id": "offline-reload",
-    "claim": "Works offline after one visit.",
-    "where": "landing fact",
-    "test": "npm run test:browser -- --grep @claim:offline-reload",
-    "sandbox": "load /demo, wait for its service worker, set the browser offline, then reload"
-  },
-  {
-    "id": "free-to-use",
-    "claim": "Free to use.",
-    "where": "landing fact",
-    "test": "npm run test:browser -- --grep @claim:free-to-use",
-    "sandbox": "landing page; assert the displayed price fact and absence of payment controls"
-  },
-  {
-    "id": "caption-formats",
-    "claim": "Reads WebVTT, SRT, and timed TTML.",
-    "where": "checker file control and README",
-    "test": "npm run test:browser -- --grep @claim:caption-formats",
-    "sandbox": "demo editor; submit one valid fixture for each format and assert the visible detected format"
-  },
-  {
-    "id": "report-export",
-    "claim": "Exports the visible findings as a text report.",
-    "where": "report action and README",
-    "test": "npm run test:browser -- --grep @claim:report-export",
-    "sandbox": "demo report; download caption-report.txt and assert its profile and visible finding"
-  }
+  {"id":"sample-preflight","claim":"Loads a sample file and shows its warnings.","where":"landing primary action","test":"npm run test:browser -- --grep @claim:sample-preflight","sandbox":"fresh /demo; assert the realistic sample and its visible warning report"},
+  {"id":"local-caption-check","claim":"Caption text stays in this browser.","where":"landing fact, privacy page, README","test":"npm run test:browser -- --grep @claim:local-caption-check","sandbox":"demo flow; record every request and assert only this app origin is used"},
+  {"id":"offline-reload","claim":"Works offline after one visit.","where":"landing fact","test":"npm run test:browser -- --grep @claim:offline-reload","sandbox":"load /demo, wait for its service worker, set the browser offline, then reload"},
+  {"id":"free-to-use","claim":"Free to use.","where":"landing fact and terms","test":"npm run test:browser -- --grep @claim:free-to-use","sandbox":"landing page; assert the displayed price fact and absence of payment controls"},
+  {"id":"caption-formats","claim":"Reads WebVTT, SRT, and timed TTML.","where":"checker file control and README","test":"npm run test:browser -- --grep @claim:caption-formats","sandbox":"demo editor; submit one valid fixture for each format and assert the visible detected format"},
+  {"id":"report-export","claim":"Exports the visible findings as a text report.","where":"report action and README","test":"npm run test:browser -- --grep @claim:report-export","sandbox":"demo report; download caption-report.txt and assert its profile and visible finding"},
+  {"id":"profile-review-findings","claim":"The placement and markup review profile highlights settings and markup to review before publishing.","where":"review profile and report","test":"npm run test:browser -- --grep @claim:profile-review-findings","sandbox":"demo sample; assert the selected profile displays placement and markup review findings"},
+  {"id":"caption-check-categories","claim":"Checks fast cues, long lines, styled text, placement settings, markup, and speaker cues.","where":"How it works and README","test":"npm run test:browser -- --grep @claim:caption-check-categories","sandbox":"demo sample; assert every advertised finding category is visibly reported"},
+  {"id":"reading-speed-threshold","claim":"Flags cues above 180 words per minute.","where":"reading-speed finding","test":"npm run test:browser -- --grep @claim:reading-speed-threshold","sandbox":"demo editor; assert a cue at 180 WPM passes and a cue above 180 WPM is flagged"},
+  {"id":"real-session-refresh","claim":"Real mode saves the current caption text in this browser for refresh.","where":"privacy page and README","test":"npm run test:browser -- --grep @claim:real-session-refresh","sandbox":"storage-free real mode; save caption text, reload, and assert it remains"},
+  {"id":"demo-memory-isolation","claim":"Demo mode keeps its sample text only in memory.","where":"demo banner, privacy page, README","test":"npm run test:browser -- --grep @claim:demo-memory-isolation","sandbox":"seed real mode; direct /demo must not read or write real storage; leave demo and restore real text"}
 ]

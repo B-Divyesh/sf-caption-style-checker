@@ -3,12 +3,12 @@
 Check caption files before upload.
 
 Caption Style Checker is for independent video educators and accessibility
-reviewers. It reads WebVTT, SRT, and timed TTML in the browser. It reports
-reading speed, long lines, speaker labels, styled text, placement cues, and
-markup a selected platform may flatten.
+reviewers. It reads WebVTT, SRT, and timed TTML in this browser. It checks fast
+cues, long lines, styled text, placement settings, markup, and speaker cues.
 
-Try the isolated sample at `/demo`. It loads a short lesson intro and its
-warnings. Sample edits stay in memory and are discarded when real mode starts.
+Try the isolated sample at `/demo`. It loads a short lesson intro and shows its
+warnings. Sample edits stay only in memory and are discarded when real mode
+starts.
 
 ## Run it
 
@@ -18,20 +18,20 @@ npm run dev
 ```
 
 Open the local URL that Vite prints. Use `npm test` for parser and browser
-tests. Use `npm run lint` and `npm run typecheck` for static checks. Use
-`npm run build` to create the deployable `dist/` directory.
+tests. Use `npm run lint` and `npm run typecheck` to check TypeScript. Use
+`npm run build` to create the `dist/` directory for deployment.
 
 ## Privacy and scope
 
-Caption text is processed on-device. Real mode saves only the current caption
-text in this browser to survive a refresh. Demo mode does not save it. The app
-does not upload files, host video, translate speech, or guarantee changing
-platform behavior. See `/privacy` and `/terms` in the app.
+Caption text stays in this browser. Real mode saves the current caption text in
+this browser for refresh. Demo mode keeps its sample text only in memory. See
+`/privacy` and `/terms` in the app.
 
 ## Deploy
 
-Deploy the contents of `dist/` to a static host with SPA navigation fallback.
-`public/staticwebapp.config.json` is provided for Azure Static Web Apps.
+Deploy `dist/` to a host that serves the app at `/demo`, `/privacy`, and
+`/terms`. `public/staticwebapp.config.json` is provided for Azure Static Web
+Apps.
 
 ## License
 

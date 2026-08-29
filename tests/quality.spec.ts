@@ -31,6 +31,17 @@ test('mobile controls have usable touch targets', async ({ page }) => {
   expect(undersized).toEqual([]);
 });
 
+test('mobile first screen keeps the sample outcome beside its primary action', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const action = page.getByRole('button', { name: 'Try it with sample data' });
+  const outcome = page.getByText('Loads a sample file and shows its warnings.');
+  await expect(action).toBeVisible();
+  await expect(outcome).toBeVisible();
+  expect((await action.boundingBox())!.y).toBeLessThan(844);
+  expect((await outcome.boundingBox())!.y + (await outcome.boundingBox())!.height).toBeLessThanOrEqual(844);
+});
+
 test('reduced-motion mode removes visible report movement', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/demo');

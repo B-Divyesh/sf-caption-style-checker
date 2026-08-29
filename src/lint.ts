@@ -33,7 +33,7 @@ export function detectFormat(source: string): Format | null {
 }
 export function parse(source: string): { format: Format; cues: Cue[] } | { error: string } {
   const format = detectFormat(source);
-  if (!format) return { error: 'This does not look like a WebVTT, SRT, or TTML file. Choose a caption file with timed cues.' };
+  if (!format) return { error: 'This does not look like a WebVTT, SRT, or timed TTML file. Choose a caption file with timed cues.' };
   if (format === 'TTML') {
     const cues: Cue[] = [];
     for (const m of source.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)) {
@@ -61,9 +61,9 @@ export function parse(source: string): { format: Format; cues: Cue[] } | { error
 }
 
 const profiles: Record<string, { label: string; tags: RegExp; settings: boolean }> = {
-  youtube: { label: 'YouTube basic captions', tags: /<(?:v|i|b|u|c(?:\.[^ >]+)?|ruby|rt|lang)[^>]*>/gi, settings: true },
-  html5: { label: 'WebVTT player', tags: /<(?:ruby|rt|lang)[^>]*>/gi, settings: false },
-  plain: { label: 'Plain-text export', tags: /<[^>]+>/g, settings: true }
+  youtube: { label: 'Placement and markup review', tags: /<(?:v|i|b|u|c(?:\.[^ >]+)?|ruby|rt|lang)[^>]*>/gi, settings: true },
+  html5: { label: 'WebVTT player review', tags: /<(?:ruby|rt|lang)[^>]*>/gi, settings: false },
+  plain: { label: 'Plain-text export review', tags: /<[^>]+>/g, settings: true }
 };
 export function lint(source: string, profile = 'youtube'): Report | { error: string } {
   const parsed = parse(source);
@@ -73,11 +73,11 @@ export function lint(source: string, profile = 'youtube'): Report | { error: str
     const n = index + 1, seconds = cue.end - cue.start, words = cue.text ? cue.text.split(/\s+/).length : 0, wpm = seconds > 0 ? words / seconds * 60 : Infinity;
     if (cue.end <= cue.start) findings.push({ level: 'error', code: 'bad-time', title: 'End time is not after start time', detail: 'Set a later end time for this cue.', cue: n });
     if (!cue.text) findings.push({ level: 'error', code: 'empty', title: 'Cue has no caption text', detail: 'Add text or remove this empty timed cue.', cue: n });
-    if (wpm > 180) findings.push({ level: 'warning', code: 'speed', title: `${Math.round(wpm)} words per minute`, detail: 'Aim for 180 words per minute or less so viewers can read it.', cue: n });
+    if (wpm > 180) findings.push({ level: 'warning', code: 'speed', title: `${Math.round(wpm)} words per minute`, detail: 'This cue is above the 180-word-per-minute guidance threshold.', cue: n });
     if (cue.text.length > 84 || cue.raw.split('\n').some(l => clean(l).length > 42)) findings.push({ level: 'warning', code: 'line-length', title: 'Long caption line', detail: 'Split this cue into shorter lines for easier reading.', cue: n });
-    if (p.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Placement may be lost', detail: `${p.label} can flatten cue placement or alignment settings.`, cue: n });
+    if (p.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Review placement settings', detail: 'This profile highlights placement or alignment settings to review in your final upload.', cue: n });
     const tags = cue.raw.match(p.tags) || [];
-    if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Caption meaning may be lost', detail: `${p.label} may remove ${[...new Set(tags.map(x => x.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup.`, cue: n });
+    if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Review caption markup', detail: `This profile highlights ${[...new Set(tags.map(x => x.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup to review in your final upload.`, cue: n });
     if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: n });
     if (/<v(?:\s|>)/i.test(cue.raw)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Check that speaker names remain visible after export.', cue: n });
   });

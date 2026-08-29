@@ -53,6 +53,10 @@ front view; practical negative space; no text, no watermark, no logos, no people
 Model: factory-image (Azure AI Foundry). License/provenance: original product
 asset generated for Caption Style Checker, 2026-08-28.
 
+The 1200×630 social image and 180×180 Apple touch icon are cropped,
+colour-preserving derivatives of that original asset, made locally on
+2026-08-29. They add no third-party material.
+
 ## Motion policy
 
 Motion is limited to a single 180ms opacity/transform report arrival and hover

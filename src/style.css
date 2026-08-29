@@ -5,3 +5,5 @@ h1[tabindex="-1"]:focus-visible{outline:3px solid var(--mint);outline-offset:5px
 .demo button,.cue-list button{min-height:44px}
 .mark,footer a,.skip{min-height:44px;display:inline-flex;align-items:center}
 nav a,footer a{min-width:44px;justify-content:center}
+.action-block{display:grid;gap:7px}.action-block span{max-width:28ch;color:var(--muted);font-size:14px}
+@media(max-width:700px){.hero{padding:30px 0 35px}.hero-art{order:initial}}

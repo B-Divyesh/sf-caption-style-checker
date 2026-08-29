@@ -16,6 +16,18 @@ describe('release contracts', () => {
     expect(config.responseOverrides?.['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
   });
 
+  it('ships share metadata and an Apple touch icon from product art', () => {
+    const index = readFileSync('index.html', 'utf8');
+    const notFound = readFileSync('404.html', 'utf8');
+    for (const document of [index, notFound]) {
+      expect(document).toContain('caption-checker-social.jpg');
+      expect(document).toContain('og:image:width" content="1200"');
+      expect(document).toContain('og:image:height" content="630"');
+      expect(document).toContain('apple-touch-icon.png');
+      expect(document).toContain('twitter:image');
+    }
+  });
+
   it('versions caches, removes old versions, and refreshes navigations online', () => {
     const worker = readFileSync('public/sw.js', 'utf8');
     expect(worker).toContain("searchParams.get('v')");
