@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { lint, parse, SAMPLE_VTT } from '../src/lint';
+
+const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
 describe('caption parser', () => {
   it('reads WebVTT cues and settings', () => {
@@ -92,6 +95,36 @@ describe('caption checks', () => {
       if (!('error' in result)) {
         expect(result.findings).toContainEqual(expect.objectContaining({ level: 'error', code: 'unsupported-tag', title: 'Unsupported WebVTT tag', cue: 1 }));
       }
+    }
+  });
+  it('F-V5-1 reports unsupported SRT markup instead of stripping it', () => {
+    const result = lint(fixture('fv5-unsupported-markup.srt'));
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) expect(result.findings).toContainEqual(expect.objectContaining({ level: 'error', code: 'unsupported-tag', title: 'Unsupported SRT tag', cue: 1 }));
+  });
+  it('F-V5-1 reports SRT font styling instead of stripping it', () => {
+    const result = lint(fixture('fv5-styled-text.srt'));
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) expect(result.findings).toContainEqual(expect.objectContaining({ level: 'warning', code: 'style', title: 'Check SRT styling after upload', cue: 1 }));
+  });
+  it('F-V5-1 resolves TTML color styling referenced by a span', () => {
+    const result = lint(fixture('fv5-referenced-color.ttml'));
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) expect(result.findings).toContainEqual(expect.objectContaining({ level: 'warning', code: 'style', title: 'Check TTML styling after upload', cue: 1 }));
+  });
+  it('F-V5-1 resolves TTML placement inherited through a style reference', () => {
+    const result = lint(fixture('fv5-referenced-placement.ttml'));
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) expect(result.findings).toContainEqual(expect.objectContaining({ level: 'warning', code: 'placement', cue: 1 }));
+  });
+  it('resolves chained TTML style references and reports unsupported inline tags', () => {
+    const source = '<tt xmlns:tts="urn:ttml:styling"><head><styling><style xml:id="base" tts:color="yellow"/><style xml:id="placed" style="base" tts:textAlign="center"/></styling></head><body><p begin="1s" end="3s" style="placed"><foo>Meaning</foo></p></body></tt>';
+    const result = lint(source);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.findings).toContainEqual(expect.objectContaining({ code: 'style' }));
+      expect(result.findings).toContainEqual(expect.objectContaining({ code: 'placement' }));
+      expect(result.findings).toContainEqual(expect.objectContaining({ level: 'error', title: 'Unsupported TTML tag' }));
     }
   });
   it('does not report placement for TTML timing attributes alone', () => {

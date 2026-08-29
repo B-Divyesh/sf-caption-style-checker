@@ -28,6 +28,17 @@ describe('release contracts', () => {
     }
   });
 
+  it('F-V5-2 revalidates stable hero and social image URLs', () => {
+    const config = JSON.parse(readFileSync('public/staticwebapp.config.json', 'utf8'));
+    for (const asset of ['/assets/signal-desk.webp', '/assets/caption-checker-social.jpg']) {
+      const route = config.routes.find((entry: { route: string }) => entry.route === asset);
+      expect(route?.headers?.['Cache-Control']).toBe('public, max-age=0, must-revalidate');
+      expect(route?.headers?.['Cache-Control']).not.toContain('immutable');
+    }
+    expect(config.routes.findIndex((entry: { route: string }) => entry.route === '/assets/signal-desk.webp'))
+      .toBeLessThan(config.routes.findIndex((entry: { route: string }) => entry.route === '/assets/*'));
+  });
+
   it('versions caches, removes old versions, and refreshes navigations online', () => {
     const worker = readFileSync('public/sw.js', 'utf8');
     expect(worker).toContain("searchParams.get('v')");

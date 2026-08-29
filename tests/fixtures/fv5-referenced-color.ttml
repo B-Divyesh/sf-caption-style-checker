@@ -1,0 +1,4 @@
+<tt xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <head><styling><style xml:id="red" tts:color="red"/></styling></head>
+  <body><p begin="1s" end="3s"><span style="red">Danger means stop</span></p></body>
+</tt>

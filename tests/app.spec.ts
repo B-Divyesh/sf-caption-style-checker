@@ -1,4 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
+const F_V5_SEMANTIC_FIXTURES = [
+  [fixture('fv5-unsupported-markup.srt'), 'Unsupported SRT tag'],
+  [fixture('fv5-styled-text.srt'), 'Check SRT styling after upload'],
+  [fixture('fv5-referenced-color.ttml'), 'Check TTML styling after upload'],
+  [fixture('fv5-referenced-placement.ttml'), 'Check placement after YouTube upload']
+] as const;
 
 test('@claim:sample-preflight loads the isolated sample and visible warnings', async ({ page }) => {
   await page.goto('/demo');
@@ -47,6 +56,23 @@ test('@claim:caption-formats visibly checks WebVTT, SRT, and timed TTML', async 
   }
   await expect(page.getByText('Review placement settings')).toHaveCount(0);
   await expect(page.getByText('Speaker cue found')).toBeVisible();
+
+  for (const [source, finding] of F_V5_SEMANTIC_FIXTURES) {
+    await page.getByLabel('Caption text').fill(source);
+    await page.getByRole('button', { name: 'Check captions' }).click();
+    await expect(page.getByText(finding)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ready to publish' })).toHaveCount(0);
+  }
+});
+
+test('F-V5-1 never reports ready for unsupported SRT markup or referenced TTML styles', async ({ page }) => {
+  await page.goto('/demo');
+  for (const [source, finding] of F_V5_SEMANTIC_FIXTURES) {
+    await page.getByLabel('Caption text').fill(source);
+    await page.getByRole('button', { name: 'Check captions' }).click();
+    await expect(page.getByText(finding)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Ready to publish' })).toHaveCount(0);
+  }
 });
 
 test('@claim:report-export downloads the visible findings as text', async ({ page }) => {

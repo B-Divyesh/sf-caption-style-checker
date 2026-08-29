@@ -1,5 +1,16 @@
 export type Format = 'WebVTT' | 'SRT' | 'TTML';
-export type Cue = { start: number; end: number; text: string; settings?: string; raw: string; id?: string; number: number };
+export type Cue = {
+  start: number;
+  end: number;
+  text: string;
+  settings?: string;
+  styles?: string[];
+  unsupportedTags?: string[];
+  unresolvedStyles?: string[];
+  raw: string;
+  id?: string;
+  number: number;
+};
 export type Finding = { level: 'error' | 'warning' | 'note'; code: string; title: string; detail: string; cue?: number };
 export type Report = { format: Format; cues: Cue[]; cueCount: number; findings: Finding[]; duration: number; profile: string };
 
@@ -74,6 +85,72 @@ function blocks(source: string) {
   return source.replace(/\r/g, '').trim().split(/\n\s*\n/).filter(Boolean);
 }
 
+function tagNames(value: string) {
+  return [...value.matchAll(/<\/?([a-z][a-z0-9-]*)(?:\s[^>]*)?>/gi)].map(match => match[1].toLowerCase());
+}
+
+function attributes(value: string) {
+  const parsed = new Map<string, string>();
+  for (const match of value.matchAll(/([\w:-]+)\s*=\s*["']([^"']*)["']/g)) parsed.set(match[1].toLowerCase(), match[2]);
+  return parsed;
+}
+
+const TTML_PLACEMENT = new Set(['displayalign', 'extent', 'origin', 'region', 'textalign', 'writingmode']);
+const TTML_STYLING = new Set([
+  'backgroundcolor', 'color', 'direction', 'display', 'fontfamily', 'fontsize', 'fontstyle', 'fontweight',
+  'lineheight', 'opacity', 'textdecoration', 'textoutline', 'textshadow', 'unicodebidi', 'visibility'
+]);
+
+function localName(name: string) {
+  return name.includes(':') ? name.slice(name.lastIndexOf(':') + 1) : name;
+}
+
+type TtmlStyle = { references: string[]; properties: string[] };
+
+function ttmlStyles(source: string) {
+  const styles = new Map<string, TtmlStyle>();
+  for (const match of source.matchAll(/<style\b([^>]*)\/?\s*>/gi)) {
+    const attrs = attributes(match[1]);
+    const id = attrs.get('xml:id') || attrs.get('id');
+    if (!id) continue;
+    const references = (attrs.get('style') || '').trim().split(/\s+/).filter(Boolean);
+    const properties = [...attrs.keys()].map(localName).filter(name => TTML_PLACEMENT.has(name) || TTML_STYLING.has(name));
+    styles.set(id, { references, properties });
+  }
+  return styles;
+}
+
+function ttmlSemantics(raw: string, styles: Map<string, TtmlStyle>) {
+  const placement = new Set<string>();
+  const styling = new Set<string>();
+  const unresolved = new Set<string>();
+  const visited = new Set<string>();
+
+  const addProperty = (name: string) => {
+    const normalized = localName(name.toLowerCase());
+    if (TTML_PLACEMENT.has(normalized)) placement.add(normalized);
+    if (TTML_STYLING.has(normalized)) styling.add(normalized);
+  };
+  const resolve = (id: string) => {
+    if (visited.has(id)) return;
+    visited.add(id);
+    const style = styles.get(id);
+    if (!style) {
+      unresolved.add(id);
+      return;
+    }
+    style.properties.forEach(addProperty);
+    style.references.forEach(resolve);
+  };
+
+  for (const element of raw.matchAll(/<(?:p|span|br)\b([^>]*)>/gi)) {
+    const attrs = attributes(element[1]);
+    attrs.forEach((_value, name) => addProperty(name));
+    (attrs.get('style') || '').trim().split(/\s+/).filter(Boolean).forEach(resolve);
+  }
+  return { placement: [...placement], styling: [...styling], unresolved: [...unresolved] };
+}
+
 function malformed(cue: number, line?: string): Finding {
   return {
     level: 'error',
@@ -98,6 +175,7 @@ export function parse(source: string): ParseResult {
   if (format === 'TTML') {
     const cues: Cue[] = [];
     const findings: Finding[] = [];
+    const styles = ttmlStyles(source);
     let cueCount = 0;
     for (const match of source.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)) {
       cueCount += 1;
@@ -113,8 +191,19 @@ export function parse(source: string): ParseResult {
         findings.push(malformed(cueCount, `begin="${begin || ''}" end="${end || ''}" dur="${dur || ''}"`));
         continue;
       }
-      const placement = attrs.match(/(?:^|\s)(?:region|tts:(?:textAlign|displayAlign|origin|extent|writingMode))\s*=\s*["'][^"']*["']/gi) || [];
-      cues.push({ start, end: finish, text: clean(match[2]), raw: match[0], settings: placement.join(' '), number: cueCount });
+      const semantics = ttmlSemantics(match[0], styles);
+      const unsupportedTags = [...new Set(tagNames(match[0]).filter(name => !['p', 'span', 'br'].includes(name)))];
+      cues.push({
+        start,
+        end: finish,
+        text: clean(match[2]),
+        raw: match[0],
+        settings: semantics.placement.join(' '),
+        styles: semantics.styling,
+        unresolvedStyles: semantics.unresolved,
+        unsupportedTags,
+        number: cueCount
+      });
     }
     if (!cueCount) return { error: 'No timed <p> captions were found in this TTML file. Use begin with end or dur attributes on each caption.' };
     return { format, cues, cueCount, findings };
@@ -173,13 +262,24 @@ export function lint(source: string, profile = 'youtube'): Report | { error: str
     }
     if (cue.text.length > 84 || cue.raw.split('\n').some(line => clean(line).length > 42)) findings.push({ level: 'warning', code: 'line-length', title: 'Long caption line', detail: 'Split this cue into shorter lines for easier reading.', cue: cue.number });
     if (selected.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Check placement after YouTube upload', detail: 'This cue uses placement or alignment settings. Preview the uploaded video because YouTube rendering can differ.', cue: cue.number });
-    const tags = selected.tags ? cue.raw.match(selected.tags) || [] : [];
+    if (parsed.format === 'TTML' && cue.styles?.length) findings.push({ level: 'warning', code: 'style', title: 'Check TTML styling after upload', detail: `This cue uses ${cue.styles.join(', ')} styling. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
+    if (parsed.format === 'TTML' && cue.unresolvedStyles?.length) findings.push({ level: 'warning', code: 'style-reference', title: 'TTML style reference could not be checked', detail: `Review the referenced ${cue.unresolvedStyles.join(', ')} style before upload.`, cue: cue.number });
+    if (parsed.format === 'TTML' && cue.unsupportedTags?.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported TTML tag', detail: `Remove or review ${cue.unsupportedTags.map(name => `<${name}>`).join(', ')}. Its meaning may not survive upload.`, cue: cue.number });
+    const tags = selected.tags && parsed.format === 'WebVTT' ? cue.raw.match(selected.tags) || [] : [];
     if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Check markup after YouTube upload', detail: `This cue uses ${[...new Set(tags.map(tag => tag.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
     if (parsed.format === 'WebVTT') {
-      const tagNames = [...cue.raw.matchAll(/<\/?([a-z][a-z0-9-]*)(?:[ .][^>]*)?>/gi)].map(match => match[1].toLowerCase());
+      const names = tagNames(cue.raw);
       const allowed = new Set(['b', 'i', 'u', 'c', 'v', 'ruby', 'rt', 'lang']);
-      const unsupported = [...new Set(tagNames.filter(name => !allowed.has(name)))];
+      const unsupported = [...new Set(names.filter(name => !allowed.has(name)))];
       if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported WebVTT tag', detail: `Remove ${unsupported.map(name => `<${name}>`).join(', ')}. It is not supported by ${selected.label}.`, cue: cue.number });
+    }
+    if (parsed.format === 'SRT') {
+      const names = [...new Set(tagNames(cue.raw))];
+      const supported = new Set(['b', 'i', 'u', 'font']);
+      const styled = names.filter(name => supported.has(name));
+      const unsupported = names.filter(name => !supported.has(name));
+      if (styled.length) findings.push({ level: 'warning', code: 'style', title: 'Check SRT styling after upload', detail: `This cue uses ${styled.map(name => `<${name}>`).join(', ')} styling. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
+      if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported SRT tag', detail: `Remove or replace ${unsupported.map(name => `<${name}>`).join(', ')}. Its meaning may not survive upload.`, cue: cue.number });
     }
     if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: cue.number });
     if (/<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Check that speaker names remain visible after export.', cue: cue.number });

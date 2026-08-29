@@ -5,6 +5,8 @@
     "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
   },
   "routes": [
+    { "route": "/assets/signal-desk.webp", "headers": { "Cache-Control": "public, max-age=0, must-revalidate" } },
+    { "route": "/assets/caption-checker-social.jpg", "headers": { "Cache-Control": "public, max-age=0, must-revalidate" } },
     { "route": "/assets/*", "headers": { "Cache-Control": "public, max-age=31536000, immutable" } },
     { "route": "/", "rewrite": "/index.html" },
     { "route": "/demo", "rewrite": "/index.html" },
