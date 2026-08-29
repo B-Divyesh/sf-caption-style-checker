@@ -1,6 +1,6 @@
 # Copy audit
 
-Audited against the repaired landing and demo on 29 August 2026. The first
+Audited against the round-three repaired landing and demo on 29 August 2026. The first
 screen reads aloud in one breath: “Check captions before upload for video
 educators; try the sample to load a file and see its warnings.”
 
@@ -83,6 +83,44 @@ No sentence exceeds 22 words. No text uses the banned marketing terms.
 | We could not read that caption file | 7 | pass |
 | Cue has an invalid timestamp | 5 | pass |
 | Use minutes and seconds from 00 to 59. | 8 | pass |
+
+## Sample and unsupported-markup findings
+
+| Copy | Words | Result |
+| --- | ---: | --- |
+| Placement settings found | 3 | pass |
+| This cue uses placement or alignment settings. Check the final upload before publishing. | 13 | pass |
+| Markup to review | 3 | pass |
+| This cue uses v, i markup. Check the final upload before publishing. | 12 | pass |
+| Speaker cue found | 3 | pass |
+| Confirm that each speaker name is clear in the caption text. | 11 | pass |
+| Unsupported WebVTT tag | 3 | pass |
+| Remove &lt;foo&gt;. This markup is outside this checker's supported WebVTT markup. | 11 | pass |
+| Unsupported SRT tag | 3 | pass |
+| Remove or replace &lt;foo&gt;. This markup is outside this checker's supported SRT markup. | 13 | pass |
+| Unsupported TTML tag | 3 | pass |
+| Remove or replace &lt;foo&gt;. This markup is outside this checker's supported TTML markup. | 13 | pass |
+
+These findings describe only local checker output. They do not assert how a
+publishing platform renders, removes, or preserves caption features.
+
+## README prose
+
+| Copy | Words | Result |
+| --- | ---: | --- |
+| Check caption files before upload. | 5 | pass |
+| Caption Style Checker is for independent video educators and accessibility reviewers. | 11 | pass |
+| It reads WebVTT, SRT, and timed TTML in this browser. | 10 | pass |
+| It checks fast cues, long lines, styled text, placement settings, markup, and speaker cues. | 13 | pass |
+| It shows local checks for the selected publishing platform. | 9 | pass |
+| It also compares cues in three high-contrast preview styles. | 9 | pass |
+| Try the isolated sample at /?demo=1. | 6 | pass |
+| It loads a short lesson intro and shows its warnings. | 10 | pass |
+| Sample edits stay only in memory and are discarded when real mode starts. | 11 | pass |
+| Caption text stays in this browser. | 6 | pass |
+| Real mode saves the current caption text in this browser for refresh. | 11 | pass |
+| Demo mode keeps its sample text only in memory. | 9 | pass |
+| Platform support changes, so review the final upload before publishing. | 10 | pass |
 
 ## Terminology
 

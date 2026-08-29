@@ -5,10 +5,10 @@ Check caption files before upload.
 Caption Style Checker is for independent video educators and accessibility
 reviewers. It reads WebVTT, SRT, and timed TTML in this browser. It checks fast
 cues, long lines, styled text, placement settings, markup, and speaker cues. It
-applies checks for the selected publishing platform and compares cues in three
-high-contrast preview styles.
+shows local checks for the selected publishing platform. It also compares cues
+in three high-contrast preview styles.
 
-Try the isolated sample at `/demo`. It loads a short lesson intro and shows its
+Try the isolated sample at `/?demo=1`. It loads a short lesson intro and shows its
 warnings. Sample edits stay only in memory and are discarded when real mode
 starts.
 

@@ -261,17 +261,17 @@ export function lint(source: string, profile = 'youtube'): Report | { error: str
       if (wpm > 180) findings.push({ level: 'warning', code: 'speed', title: `${Math.round(wpm)} words per minute`, detail: 'This cue is above the 180-word-per-minute guidance threshold.', cue: cue.number });
     }
     if (cue.text.length > 84 || cue.raw.split('\n').some(line => clean(line).length > 42)) findings.push({ level: 'warning', code: 'line-length', title: 'Long caption line', detail: 'Split this cue into shorter lines for easier reading.', cue: cue.number });
-    if (selected.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Check placement after YouTube upload', detail: 'This cue uses placement or alignment settings. Preview the uploaded video because YouTube rendering can differ.', cue: cue.number });
+    if (selected.settings && cue.settings?.trim()) findings.push({ level: 'warning', code: 'placement', title: 'Placement settings found', detail: 'This cue uses placement or alignment settings. Check the final upload before publishing.', cue: cue.number });
     if (parsed.format === 'TTML' && cue.styles?.length) findings.push({ level: 'warning', code: 'style', title: 'Check TTML styling after upload', detail: `This cue uses ${cue.styles.join(', ')} styling. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
     if (parsed.format === 'TTML' && cue.unresolvedStyles?.length) findings.push({ level: 'warning', code: 'style-reference', title: 'TTML style reference could not be checked', detail: `Review the referenced ${cue.unresolvedStyles.join(', ')} style before upload.`, cue: cue.number });
-    if (parsed.format === 'TTML' && cue.unsupportedTags?.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported TTML tag', detail: `Remove or review ${cue.unsupportedTags.map(name => `<${name}>`).join(', ')}. Its meaning may not survive upload.`, cue: cue.number });
+    if (parsed.format === 'TTML' && cue.unsupportedTags?.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported TTML tag', detail: `Remove or replace ${cue.unsupportedTags.map(name => `<${name}>`).join(', ')}. This markup is outside this checker's supported TTML markup.`, cue: cue.number });
     const tags = selected.tags && parsed.format === 'WebVTT' ? cue.raw.match(selected.tags) || [] : [];
-    if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Check markup after YouTube upload', detail: `This cue uses ${[...new Set(tags.map(tag => tag.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
+    if (tags.length) findings.push({ level: 'warning', code: 'unsupported-tag', title: 'Markup to review', detail: `This cue uses ${[...new Set(tags.map(tag => tag.replace(/<\/?([^ .>]+).*/, '$1')))].join(', ')} markup. Check the final upload before publishing.`, cue: cue.number });
     if (parsed.format === 'WebVTT') {
       const names = tagNames(cue.raw);
       const allowed = new Set(['b', 'i', 'u', 'c', 'v', 'ruby', 'rt', 'lang']);
       const unsupported = [...new Set(names.filter(name => !allowed.has(name)))];
-      if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported WebVTT tag', detail: `Remove ${unsupported.map(name => `<${name}>`).join(', ')}. It is not supported by ${selected.label}.`, cue: cue.number });
+      if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported WebVTT tag', detail: `Remove ${unsupported.map(name => `<${name}>`).join(', ')}. This markup is outside this checker's supported WebVTT markup.`, cue: cue.number });
     }
     if (parsed.format === 'SRT') {
       const names = [...new Set(tagNames(cue.raw))];
@@ -279,10 +279,10 @@ export function lint(source: string, profile = 'youtube'): Report | { error: str
       const styled = names.filter(name => supported.has(name));
       const unsupported = names.filter(name => !supported.has(name));
       if (styled.length) findings.push({ level: 'warning', code: 'style', title: 'Check SRT styling after upload', detail: `This cue uses ${styled.map(name => `<${name}>`).join(', ')} styling. Preview the uploaded video to confirm that its meaning remains clear.`, cue: cue.number });
-      if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported SRT tag', detail: `Remove or replace ${unsupported.map(name => `<${name}>`).join(', ')}. Its meaning may not survive upload.`, cue: cue.number });
+      if (unsupported.length) findings.push({ level: 'error', code: 'unsupported-tag', title: 'Unsupported SRT tag', detail: `Remove or replace ${unsupported.map(name => `<${name}>`).join(', ')}. This markup is outside this checker's supported SRT markup.`, cue: cue.number });
     }
     if (/<(?:i|b|u|c\b|ruby|rt)\b/i.test(cue.raw)) findings.push({ level: 'note', code: 'emphasis', title: 'Styled text found', detail: 'Keep a plain-text alternative if the style carries meaning.', cue: cue.number });
-    if (/<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Check that speaker names remain visible after export.', cue: cue.number });
+    if (/<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text)) findings.push({ level: 'note', code: 'speaker', title: 'Speaker cue found', detail: 'Confirm that each speaker name is clear in the caption text.', cue: cue.number });
   });
   if (parsed.cues.length && !parsed.cues.some(cue => /<v(?:\s|>)/i.test(cue.raw) || /^[A-Z][A-Z .'-]{1,25}:/m.test(cue.text))) findings.push({ level: 'note', code: 'speaker-missing', title: 'No speaker labels found', detail: 'Add names when more than one voice speaks or identity matters.' });
   const duration = parsed.cues.length ? Math.max(...parsed.cues.map(cue => cue.end)) : 0;

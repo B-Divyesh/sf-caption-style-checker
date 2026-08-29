@@ -6,20 +6,29 @@ const F_V5_SEMANTIC_FIXTURES = [
   [fixture('fv5-unsupported-markup.srt'), 'Unsupported SRT tag'],
   [fixture('fv5-styled-text.srt'), 'Check SRT styling after upload'],
   [fixture('fv5-referenced-color.ttml'), 'Check TTML styling after upload'],
-  [fixture('fv5-referenced-placement.ttml'), 'Check placement after YouTube upload']
+  [fixture('fv5-referenced-placement.ttml'), 'Placement settings found']
 ] as const;
 
 test('@claim:sample-preflight loads the isolated sample and visible warnings', async ({ page }) => {
-  await page.goto('/demo');
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Try it with sample data' }).click();
+  await expect(page).toHaveURL('/?demo=1');
   await expect(page).toHaveTitle('Demo — Caption Style Checker');
   await expect(page.getByRole('status')).toContainText('nothing is saved');
+  await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start for real' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Check sample captions' })).toBeVisible();
   await expect(page.locator('.finding')).toHaveCount(9);
-  await expect(page.getByText('Check placement after YouTube upload').first()).toBeVisible();
+  await expect(page.getByText('Placement settings found').first()).toBeVisible();
+  await expect(page.getByText('This cue uses placement or alignment settings. Check the final upload before publishing.').first()).toBeVisible();
+  await page.getByLabel('Caption text').fill('temporary demo edit');
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page.getByLabel('Caption text')).toContainText('WEBVTT');
+  await expect(page.locator('.finding')).toHaveCount(9);
 });
 
 test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   await page.waitForFunction(() => (window as Window & { __captionShellCached?: boolean }).__captionShellCached === true);
   await context.setOffline(true);
@@ -86,13 +95,18 @@ test('@claim:report-export downloads the visible findings as text', async ({ pag
   let text = '';
   for await (const chunk of stream) text += chunk.toString();
   expect(text).toContain('Publishing platform: YouTube upload');
-  expect(text).toContain('WARNING cue 1: Check placement after YouTube upload');
+  expect(text).toContain('WARNING cue 1: Placement settings found');
+  expect(text).toContain('Check the final upload before publishing.');
+  expect(text).not.toMatch(/YouTube rendering|not supported by YouTube|may not survive/i);
 });
 
-test('@claim:platform-review-findings applies the selected publishing platform rules', async ({ page }) => {
+test('@claim:platform-review-findings shows scoped local checks for the selected publishing platform', async ({ page }) => {
   await page.goto('/demo');
   await expect(page.getByText('Platform: YouTube upload')).toBeVisible();
-  await expect(page.getByText('Check placement after YouTube upload').first()).toBeVisible();
+  await expect(page.getByText('Placement settings found').first()).toBeVisible();
+  await expect(page.getByText('Markup to review').first()).toBeVisible();
+  await expect(page.locator('#results')).toContainText('Check the final upload before publishing.');
+  await expect(page.locator('#results')).not.toContainText(/YouTube rendering|not supported by YouTube|may not survive/i);
   await page.getByLabel('Publishing platform').selectOption('html');
   await expect(page.getByText('Platform: HTML video track')).toBeVisible();
   await page.getByLabel('Caption text').fill('1\n00:00:01,000 --> 00:00:03,000\nSRT caption.');
@@ -112,7 +126,7 @@ test('@claim:platform-rules-reviewed shows the dated source for each selected pl
 
 test('@claim:caption-check-categories shows every advertised check category', async ({ page }) => {
   await page.goto('/demo');
-  for (const finding of ['words per minute', 'Long caption line', 'Styled text found', 'Check placement after YouTube upload', 'Check markup after YouTube upload', 'Speaker cue found']) {
+  for (const finding of ['words per minute', 'Long caption line', 'Styled text found', 'Placement settings found', 'Markup to review', 'Speaker cue found']) {
     await expect(page.getByText(finding, { exact: false }).first()).toBeVisible();
   }
 });
@@ -234,7 +248,7 @@ test('@claim:demo-memory-isolation never reads or writes real caption storage', 
       return original.call(this, key);
     };
   }, realSource);
-  await page.goto('/demo');
+  await page.goto('/?demo=1');
   expect(await page.evaluate(() => (window as Window & { __storageReads?: string[] }).__storageReads)).not.toContain('caption-source');
   const demoEdit = '1\n00:00:01,000 --> 00:00:03,000\nEdited only in demo.';
   await page.getByLabel('Caption text').fill(demoEdit);
@@ -305,6 +319,29 @@ test('keyboard focus is visible on file selection and moves to route headings', 
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL('/privacy');
   await expect(page.getByRole('heading', { name: 'Privacy', level: 1 })).toBeFocused();
+  await page.goBack();
+  await expect(page).toHaveURL('/demo');
+  await expect(page.getByRole('heading', { name: 'Check sample captions', level: 1 })).toBeFocused();
+});
+
+test('real routes set their own titles, metadata, canonicals, and legal links', async ({ page }) => {
+  const routes = [
+    ['/', 'Caption Style Checker — Check captions before upload', 'Check captions before upload', '/'],
+    ['/demo', 'Demo — Caption Style Checker', 'Check sample captions', '/demo'],
+    ['/?demo=1', 'Demo — Caption Style Checker', 'Check sample captions', '/demo'],
+    ['/privacy', 'Privacy — Caption Style Checker', 'Privacy', '/privacy'],
+    ['/terms', 'Terms — Caption Style Checker', 'Terms', '/terms']
+  ] as const;
+  for (const [path, title, heading, canonical] of routes) {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+    await expect(page.getByRole('heading', { name: heading, level: 1 })).toHaveCount(1);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /\S/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', title);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `http://127.0.0.1:4173${canonical}`);
+    await expect(page.locator('footer').getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
+    await expect(page.locator('footer').getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
+  }
 });
 
 test('an online navigation ignores a stale cached shell', async ({ page }) => {

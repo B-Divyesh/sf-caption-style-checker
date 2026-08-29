@@ -90,7 +90,7 @@ function renderAndFocus(selector: string) {
 }
 function bind() {
   document.querySelectorAll<HTMLAnchorElement>('[data-link]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); nav(a.getAttribute('href') || '/'); }));
-  document.querySelector('#demo')?.addEventListener('click', () => nav('/demo'));
+  document.querySelector('#demo')?.addEventListener('click', () => nav('/?demo=1'));
   document.querySelector('#real')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; nav('/'); });
   document.querySelector('#reset-demo')?.addEventListener('click', () => { demoSource = SAMPLE_VTT; activeCue = 0; render(); });
   const textarea = document.querySelector<HTMLTextAreaElement>('#source');

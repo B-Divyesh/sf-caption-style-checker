@@ -1,8 +1,8 @@
 # Demo sandbox
 
-Open `/demo` or `/?demo=1` to enter the sample checker directly. It loads a
-three-cue WebVTT lesson intro with speaker markup, emphasis, placement settings,
-and one deliberately fast cue.
+Open `/?demo=1` to enter the sample checker directly. `/demo` is an equivalent
+short URL. Both load a three-cue WebVTT lesson intro with speaker markup,
+emphasis, placement settings, and one deliberately fast cue.
 
 The banner says **Demo — sample data, nothing is saved**. Visitors can replace
 the sample and check their edit without leaving the sandbox. **Reset demo**

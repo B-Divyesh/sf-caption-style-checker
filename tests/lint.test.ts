@@ -98,6 +98,24 @@ describe('caption checks', () => {
     expect('error' in result).toBe(false);
     if (!('error' in result)) expect(result.findings.some(f => f.code === 'unsupported-tag')).toBe(true);
   });
+  it('F-1-1 keeps platform findings scoped to observable local checks', () => {
+    const sources = [
+      SAMPLE_VTT,
+      'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\n<foo>Meaning</foo>',
+      fixture('fv5-unsupported-markup.srt'),
+      '<tt><body><div><p begin="1s" end="3s"><foo>Meaning</foo></p></div></body></tt>'
+    ];
+    const copy = sources.flatMap(source => {
+      const result = lint(source, 'youtube');
+      return 'error' in result ? [result.error] : result.findings.flatMap(finding => [finding.title, finding.detail]);
+    }).join('\n');
+    expect(copy).toContain('Placement settings found');
+    expect(copy).toContain('Markup to review');
+    expect(copy).toContain("outside this checker's supported WebVTT markup");
+    expect(copy).toContain("outside this checker's supported SRT markup");
+    expect(copy).toContain("outside this checker's supported TTML markup");
+    expect(copy).not.toMatch(/YouTube rendering|not supported by YouTube|may not survive/i);
+  });
   it('F-V4-2 rejects unsupported WebVTT tags for every platform profile', () => {
     const source = 'WEBVTT\n\n00:00:01.000 --> 00:00:03.000\n<foo>Meaning</foo>';
     for (const profile of ['youtube', 'html']) {
