@@ -1,4 +1,43 @@
-# Caption Style Checker repair handoff
+# Caption Style Checker review-1 handoff
+
+## Review outcome (2026-08-29 UTC): FAIL
+
+This reviewer made no product-code changes. The requested adversarial review is
+in `.factory/review-1.md` and identifies four blocking claim-inventory/testing
+findings plus eight minor mobile-copy, metadata, and external-link findings.
+The review commit contains only this handoff and the review report.
+
+## How verified
+
+From a fresh clone of candidate `29b9efe692d1281cd2d70a6e83c7974376b1b875`:
+
+```sh
+npm ci
+npm run test:browser -- --grep @claim:sample-preflight
+npm run test:browser -- --grep @claim:local-caption-check
+npm run test:browser -- --grep @claim:offline-reload
+npm run test:browser -- --grep @claim:free-to-use
+npm run test:browser -- --grep @claim:caption-formats
+npm run test:browser -- --grep @claim:report-export
+npm test
+npm run build
+```
+
+All commands passed. Fresh live desktop and 390 px browser contexts verified
+first-read clarity, the one-click demo, reset/exit storage isolation, request
+origin, offline reload, routes, back-button focus, status codes, and Axe WCAG
+2 A/AA. Those passing checks do not close the claim-audit defects described in
+the review.
+
+## Next steps
+
+Resolve every F-1-* item in `.factory/review-1.md`, deploy the repaired build,
+and have a new reviewer run the complete checklist from a clean state. Do not
+mark this candidate accepted until the review has zero findings.
+
+---
+
+# Previous repair handoff (superseded by review-1)
 
 ## Independent re-verification (2026-08-29 UTC): PASS
 
