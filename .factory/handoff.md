@@ -1,4 +1,21 @@
-# Caption Style Checker repair 5 handoff
+# Caption Style Checker independent verification 6 handoff
+
+## Current release decision
+
+**PASS — candidate `6c623bbf00f1945fbeac895c473a56eb0772e6aa` is approved for release.**
+
+An independent clean-checkout verification on 29 August 2026 UTC passed every
+claim test, all local quality gates, live functional/privacy/accessibility/PWA
+checks, and the mobile Lighthouse run. The deployment at
+https://caption-style-checker.sociobot.in matches the candidate executable
+after normalizing only the expected build-specific service-worker cache ID.
+There are no critical, high, medium, or low defects. Full evidence and exact
+commands are in `.factory/verification-6.md`. No product code was changed by
+the verifier.
+
+---
+
+# Repair 5 handoff (historical context)
 
 ## Outcome
 
