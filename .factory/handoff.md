@@ -1,5 +1,16 @@
 # Caption Style Checker repair handoff
 
+## Independent re-verification (2026-08-29 UTC): PASS
+
+**Candidate `5166690211271171561eacc574bf815bb7764f67` is accepted at
+https://caption-style-checker.sociobot.in.** A clean-checkout verifier ran all
+six declared claim commands, the complete local suite, type/lint checks, and
+the exact production build. Fresh live desktop and 390px sessions passed
+functional, privacy/request-log, keyboard, offline/service-worker, header,
+axe, and Lighthouse checks. There are no known release-blocking defects.
+
+The full independent evidence is in `.factory/verification-2.md`.
+
 ## Repair scope
 
 This repair addresses the independent verifier report in commit
